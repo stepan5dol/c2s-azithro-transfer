@@ -1,0 +1,29 @@
+source,condition,cell_type,n_cells
+atlas,He22,gCap,512
+atlas,He22,Pericyte,410
+atlas,He22,aCap,116
+atlas,He22,Pulmonary venous EC,104
+bpd,Acute26,gCap,1212
+bpd,Acute26,aCap,304
+bpd,Acute26,Pericyte,269
+bpd,Acute26,Pulmonary venous EC,198
+bpd,BPD7mo,gCap,138
+bpd,BPD7mo,Pulmonary venous EC,44
+bpd,BPD7mo,aCap,29
+bpd,BPD7mo,Pericyte,27
+bpd,BPDPH7mo,gCap,1744
+bpd,BPDPH7mo,aCap,526
+bpd,BPDPH7mo,Pericyte,212
+bpd,BPDPH7mo,Pulmonary venous EC,188
+rat,AZI,gCAP,608
+rat,AZI,Peri,188
+rat,AZI,VEC,113
+rat,AZI,aCAP,86
+rat,HO,gCAP,732
+rat,HO,Peri,238
+rat,HO,VEC,139
+rat,HO,aCAP,95
+rat,RA,gCAP,1564
+rat,RA,aCAP,417
+rat,RA,Peri,294
+rat,RA,VEC,168
