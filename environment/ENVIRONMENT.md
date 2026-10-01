@@ -22,8 +22,8 @@ The versions are those installed on 2026-10-01, when the scripts of `pipeline_sh
 
 | item | value |
 |---|---|
-| GPU | one NVIDIA A100 SXM4, 80 GB (vast.ai rental; 32 vCPU AMD EPYC 7513, 129 GB RAM) |
-| framework | axolotl (Docker image `axolotlai/axolotl-cloud`, vast.ai template), `input_output` segments dataset, full fine-tuning without adapter |
+| GPU | one NVIDIA A100 SXM4, 80 GB (32 vCPU AMD EPYC 7513, 129 GB RAM) |
+| framework | axolotl (Docker image `axolotlai/axolotl-cloud`), `input_output` segments dataset, full fine-tuning without adapter |
 | transformers / torch | 5.12.1 / 2.12.0 |
 | attention | flash-attention 2 through `kernels-community/flash-attn2` |
 | precision | bf16, tf32 |
@@ -35,4 +35,4 @@ The versions are those installed on 2026-10-01, when the scripts of `pipeline_sh
 |---|---|
 | test set | vLLM 0.25.0 (V1 engine), bf16, max_model_len 8192, one sample per prompt, temperature 1.0 (log of the 0.8 run in `pod/logs/`), same pod and GPU as the training |
 | Python / torch | 3.12.13 / 2.11.0+cu130 |
-| azithromycin prompts | same script on a vast.ai pod from the `vastai/vllm` template; the vLLM version of this run is not logged separately |
+| azithromycin prompts | same script; the vLLM version of this run is not logged separately |
