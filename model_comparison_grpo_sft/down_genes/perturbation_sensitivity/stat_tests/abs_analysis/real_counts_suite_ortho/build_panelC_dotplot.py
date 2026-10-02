@@ -44,14 +44,11 @@ OUT = HERE / "deck_figures"
 OUT.mkdir(exist_ok=True)
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent))
-from deck_figures import GRID, INK, INK2, MUTED, SEQ_HI, style  # noqa: E402
-import plot_style as PS  # noqa: E402  -- same font sizes as the violin panels
+from deck_figures import GRID, INK, INK2, MUTED, SEQ_HI, style
+import plot_style as PS
 
 REPORTS = HERE / "human_panel_variants" / "autophagy_program" / "reports"
 
-# One cohort per table, all three written by limma_sets.py --condition. The
-# cohort only selects which table is read; the four panels, the encoding and the
-# geometry stay identical so the three figures can be laid side by side.
 COHORTS = {
     "BPD7mo":   ("bpd7mo_limma_sets.csv",   "Human, term-born versus BPD at 7 months"),
     "BPDPH7mo": ("bpdph7mo_limma_sets.csv", "Human, term-born versus BPD-PH at 7 months"),
@@ -61,7 +58,6 @@ COHORTS = {
 CTS = ["gCap", "aCap", "Pericyte", "VEC"]
 POS, NEG = SEQ_HI, "#e34948"
 
-# (row label, term exactly as it appears in bpd7mo_limma_sets.csv)
 TERMS = [
     ("Inflammatory Response", "MSigDB_Hallmark_2020__Inflammatory Response"),
     ("Interferon Gamma Response", "MSigDB_Hallmark_2020__Interferon Gamma Response"),
@@ -80,7 +76,7 @@ def load(sets_csv: Path):
 
 
 def dotplot(cam: pd.DataFrame, cohort: str, subtitle: str) -> None:
-    PS.apply()   # same font family as every other figure
+    PS.apply()
     fig, axes = plt.subplots(1, 2, figsize=(8.4, 3.9), sharey=True,
                              gridspec_kw={"wspace": 0.10})
     for ax, half, want, title in (
@@ -124,16 +120,12 @@ def dotplot(cam: pd.DataFrame, cohort: str, subtitle: str) -> None:
         loc="upper center", bbox_to_anchor=(0.5, 0.045), ncol=4, frameon=False,
         fontsize=PS.FS_LEGEND, labelcolor=INK2, handletextpad=0.5, columnspacing=1.8)
 
-    # white, not the deck tint: this panel is assembled into the main figure,
-    # where an off-white rectangle on a white page reads as a stray box
     fig.patch.set_facecolor("white")
     for a in axes:
         a.set_facecolor("white")
     fig.suptitle(subtitle, fontsize=PS.FS_SUPTITLE, y=1.02)
     stem = "camerapr_panelC_dotplot" + ("" if cohort == "BPD7mo" else f"_{cohort.lower()}")
     out = OUT / f"{stem}.png"
-    # same dpi as the violin panels, or the shared plot_style.FS_* sizes stop
-    # matching once both are placed on the same page
     fig.savefig(out, dpi=PS.DPI, bbox_inches="tight", facecolor="white")
     fig.savefig(out.with_suffix(".pdf"), bbox_inches="tight", facecolor="white")
     plt.close(fig)

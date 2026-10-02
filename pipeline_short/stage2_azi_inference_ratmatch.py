@@ -42,7 +42,6 @@ from pipeline_short.common import (
 )
 from pipeline_short.stage1_sft_bidir import load_bpd_sentences
 
-# Rat-matched prompt variant — verbatim rat AZI perturbation string, unchanged.
 AZI_PERTURBATION = PERTURBATION_STR[("rat", "HO", "AZI")]
 
 REGISTRY_PATH = BASE / "cell_split_registry_short.csv"

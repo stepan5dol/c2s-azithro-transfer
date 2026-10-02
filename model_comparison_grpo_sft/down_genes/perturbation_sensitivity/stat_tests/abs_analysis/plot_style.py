@@ -12,46 +12,39 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-# Semantic roles, reused across every figure that needs them.
-GT_COLOR = "#4C72B0"      # real / ground-truth cells
-PRED_COLOR = "#DD8452"    # model-generated cells
-HO_COLOR = "#8C8C8C"      # disease / hyperoxia baseline (gray = "before")
+GT_COLOR = "#4C72B0"
+PRED_COLOR = "#DD8452"
+HO_COLOR = "#8C8C8C"
 
 CT_COLORS = {
-    "gCap":     "#2CA02C",  # green
-    "aCap":     "#D62728",  # red
-    "Pericyte": "#1F77B4",  # blue
-    "VEC":      "#9467BD",  # purple
+    "gCap":     "#2CA02C",
+    "aCap":     "#D62728",
+    "Pericyte": "#1F77B4",
+    "VEC":      "#9467BD",
 }
 
 COND_COLORS = {
-    "HO":  HO_COLOR,   # disease / hyperoxia -- same gray used for "disease" everywhere else
-    "AZI": "#17BECF",  # treated / azithromycin -- cyan, distinct from CT_COLORS and GT/PRED
+    "HO":  HO_COLOR,
+    "AZI": "#17BECF",
 }
 
 COND_COLORS_HUMAN = {
-    "Acute":   HO_COLOR,   # acute preterm injury -- gray, same "disease/baseline" role as rat HO
-    "BPD":     "#17BECF",  # chronic outcome 1 -- cyan, same slot as rat AZI
-    "BPD-PH":  "#E45756",  # chronic outcome 2 (distinct subtype, not a progression from BPD) -- red
+    "Acute":   HO_COLOR,
+    "BPD":     "#17BECF",
+    "BPD-PH":  "#E45756",
 }
 
 SIG_COLOR = "#333333"
 
 DPI = 300
 
-# Panel typography. Figures that are meant to be assembled into one main figure
-# must not each carry their own font sizes -- a panel scaled to fit then arrives
-# with text a different size from its neighbours. Both delta cores read these,
-# so the sizes are identical across species and can be changed in one place.
-FS_SUPTITLE = 12    # figure title
-FS_TITLE = 11       # panel title: cell type and n
-FS_LABEL = 10       # axis label
-FS_TICK = 9.5       # tick labels
-FS_LEGEND = 9       # legend entries
-FS_ANNOT = 9        # arm labels above the violins
+FS_SUPTITLE = 12
+FS_TITLE = 11
+FS_LABEL = 10
+FS_TICK = 9.5
+FS_LEGEND = 9
+FS_ANNOT = 9
 
-# One violin panel of a single cell type, in inches. Fixed so the three panels
-# of the main figure arrive at the same scale.
 PANEL_SIZE = (4.2, 5.0)
 
 
@@ -99,7 +92,6 @@ def sig_label(p: float) -> str:
     return f"p={p:.3f}"
 
 
-# Older name, kept so existing callers keep working; same p-value output.
 sig_stars = sig_label
 
 

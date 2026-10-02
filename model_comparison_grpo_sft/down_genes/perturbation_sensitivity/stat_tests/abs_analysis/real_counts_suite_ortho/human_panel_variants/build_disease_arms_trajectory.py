@@ -37,28 +37,23 @@ import scipy.sparse as sp
 
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
-import human_updown_percell as DIS   # noqa: E402
-import panel_sets_human as PSH       # noqa: E402
+import human_updown_percell as DIS
+import panel_sets_human as PSH
 
-import common_human as CH            # noqa: E402
-import rank_expr_model as rem        # noqa: E402
-import load_data as L                # noqa: E402
-import real_counts as RC             # noqa: E402
+import common_human as CH
+import rank_expr_model as rem
+import load_data as L
+import real_counts as RC
 
 PIPELINE_SHORT = Path("/Users/stepandolzhenko/Documents/AzithroGemma/pipeline_short")
 sys.path.insert(0, str(PIPELINE_SHORT))
-import stage1_sft_bidir as S1        # noqa: E402  -- carries ATLAS_*_PATH; a bare
-                                     # `import common` here would resolve to
-                                     # abs_analysis/common.py, already in sys.modules
+import stage1_sft_bidir as S1
 
 PAIRS_CSV = HERE / "recovered_human_test_pairs.csv"
 TEST_INFERENCE = Path("/Users/stepandolzhenko/Downloads/test_inference_results3.jsonl")
 SEED = 0
 
-# Only the unfiltered rescued panel is built. PSH.GATES also offers the
-# differential-expression-filtered variant; it is not part of this analysis.
 GATES = ("full_list",)
-# Cell types that additionally get a figure of their own, same construction.
 SOLO_CT = ("gCap",)
 
 CT_MAP = {"general capillary endothelial cell (endothelial)": "gCap",
@@ -67,17 +62,12 @@ CT_MAP = {"general capillary endothelial cell (endothelial)": "gCap",
           "vascular endothelial cell (endothelial)": "VEC",
           "pulmonary venous endothelial cell (endothelial)": "VEC"}
 
-# (condition, source label, pair_type providing tgt cells + predictions, source kind)
 ARMS = [
     ("Acute26", "He22", "human_He22_Acute26", "atlas"),
     ("BPD7mo", "Term", "human_Acute26_BPD7mo", "term"),
     ("BPDPH7mo", "Term", "human_Acute26_BPDPH7mo", "term"),
 ]
 
-# Reader-facing naming per arm, keyed by (source label, condition). The code
-# names above stay because the pairing registry and the gene workbooks are keyed
-# by them; nothing a reader sees is a code name.
-#   src_title, tgt_title, src_short, tgt_short, src_slug, tgt_slug
 LABELS = {
     ("He22", "Acute26"): (
         "fetal lung, normal development, 22 weeks of gestation",
@@ -195,8 +185,6 @@ def main():
     for cond, src_label, pt, kind in ARMS:
         df = pairs[(pairs["pair_type"] == pt) & pairs["ct"].notna()].copy()
         if kind == "term":
-            # baseline rows drawn from the real Term pool of the same cell type;
-            # stash them under synthetic keys so the shared run() can index them
             keys = []
             for i, (_, r) in enumerate(df.iterrows()):
                 X = term_mats.get(r["ct"])
@@ -210,13 +198,11 @@ def main():
             df = df[df["src_barcode"].notna()]
 
         DIS.CONDITION, DIS.SRC_LABEL, DIS.PAIR_TYPE = cond, src_label, pt
-        # the gene panel is always read from the workbook of the target condition
         DIS.PANEL_CONDITION = cond
         (DIS.SRC_TITLE, DIS.TGT_TITLE, DIS.SRC_SHORT,
          DIS.TGT_SHORT, DIS.SRC_SLUG, DIS.TGT_SLUG) = LABELS[(src_label, cond)]
         DIS.SRC_FIG, DIS.TGT_FIG = {("He22", "Acute26"): ("gestational week 22", "acute injury, week 26")}.get(
             (src_label, cond), (None, None))
-        # atlas arm keeps the registry pair; term arms drew their baseline above
         DIS.PAIRING = "paired" if kind == "atlas" else "random_within_ct"
         print(f"\n{'=' * 78}\n=== {DIS.SRC_TITLE} -> {DIS.TGT_TITLE}  (n={len(df)})\n{'=' * 78}")
         print(df.groupby("ct").size().to_string())
@@ -224,7 +210,6 @@ def main():
             print(f"--- gate={gate}, all cell types")
             DIS.ONLY_CT = None
             DIS.run(gate, df, real_by_bc, pred_by_idx, model, CT_MAP)
-            # same construction, same numbers, one cell type on its own figure
             for ct in SOLO_CT:
                 print(f"--- gate={gate}, {ct} alone")
                 DIS.ONLY_CT = ct

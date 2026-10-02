@@ -26,15 +26,15 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
-from matplotlib.lines import Line2D  # noqa: F401
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.lines import Line2D
 
 HERE = Path(__file__).parent
 OUT = HERE / "deck_figures"
 OUT.mkdir(exist_ok=True)
 
 sys.path.insert(0, str(HERE.parent))
-from plot_style import GT_COLOR, PRED_COLOR  # noqa: E402
+from plot_style import GT_COLOR, PRED_COLOR
 
 SURFACE = "#fcfcfb"
 INK = "#0b0b0b"
@@ -42,12 +42,9 @@ INK2 = "#52514e"
 MUTED = "#8a8984"
 GRID = "#e4e3df"
 ACCENT_FIG = "#b03a2e"
-# ordered three-step ramp for the outcome classes: further travelled = darker
 RAMP = ["#c8d6e8", "#7b9fd0", GT_COLOR]
 
-# one hue, two ordinal steps; the light step still clears 2:1 on SURFACE
 SEQ_HI, SEQ_LO = "#2a78d6", "#86b6ef"
-# diverging pair for signed quantities: blue <-> red, neutral gray midpoint
 DIV_POS, DIV_NEG, DIV_MID = "#2a78d6", "#e34948", "#f0efec"
 DIVERGING = LinearSegmentedColormap.from_list(
     "recovery", ["#0d366b", DIV_POS, "#9ec5f4", DIV_MID, "#f4aeae", DIV_NEG, "#8f2626"][::-1])
@@ -91,8 +88,6 @@ def short(term: str, lib: str | None = None) -> str:
     t = re.sub(r"\s*WP\d+\s*$", "", t)
     return f"{t.strip()}  [{LIB_TAG.get(lib, lib)}]" if lib else t.strip()
 
-
-# ------------------------------------------------------------------ autophagy
 
 def _term_halves(terms, condition="BPD7mo"):
     """Per term x cell type, the AZI shift of the two halves SEPARATELY.
@@ -176,7 +171,6 @@ def autophagy_terms():
     fig, (axA, axB) = plt.subplots(1, 2, figsize=(16.0, 4.7),
                                    gridspec_kw={"width_ratios": [1.0, 1.45], "wspace": 0.60})
 
-    # ---- A: in how many cell types does the term fall
     style(axA)
     y = np.arange(len(r))
     axA.barh(y, r.falls, height=0.60, color=SEQ_LO, zorder=2)
@@ -204,7 +198,6 @@ def autophagy_terms():
                           f"and are not drawn", transform=axA.transAxes,
              fontsize=8, color=MUTED, va="top")
 
-    # ---- B: the two halves of the five core terms, as a grid
     core = r[(r.falls == 4) & (r.falls_sig >= 3)].sort_values("med_dis")
     h = _term_halves(list(core.term)).set_index(["term", "cell_type"])
     terms = list(core.term)
@@ -258,7 +251,6 @@ def autophagy_terms():
                          "signed-rank p < 0.05",
              transform=axB.transAxes, fontsize=8.5, color=INK2, va="bottom", linespacing=1.6)
 
-    # colour key: signed by the direction that is correct for that half
     pb = axB.get_position()
     cax = fig.add_axes([pb.x0 + 0.10, pb.y0 - 0.055, 0.16, 0.030])
     cax.imshow(np.linspace(0, 1, 256).reshape(1, -1), aspect="auto", cmap=DIVERGING)
@@ -276,8 +268,6 @@ def autophagy_terms():
     save(fig, "autophagy_terms.png")
     h.reset_index().to_csv(OUT / "autophagy_terms_halves.csv", index=False)
 
-
-# ------------------------------------------------------------------ funnel
 
 def funnel():
     """Why the two autophagy slides carry different gene counts: they stop at
@@ -325,8 +315,6 @@ def funnel():
     save(fig, "funnel.png")
 
 
-# ------------------------------------------------------------------ ceiling
-
 def ceiling():
     m = rd("human/reports/synthetic_down_matches_real_down_bpd7mo.csv").set_index("cell_type")
     c = rd("human/reports/real_matches_real_down_bpd7mo.csv").set_index("cell_type")
@@ -359,8 +347,6 @@ def ceiling():
     ax.legend(frameon=False, fontsize=9.5, labelcolor=INK2, loc="upper left", ncol=2)
     save(fig, "ceiling.png")
 
-
-# ------------------------------------------------------------------ recovery_ratio
 
 def recovery_ratio():
     """The pipeline's own quantity, not a new one:
@@ -433,7 +419,6 @@ def recovery_ratio():
                         "arms, log2FC vs Term below -0.25 - the model takes no part in selecting them",
              ha="center", fontsize=9, color=INK2)
     save(fig, "recovery_ratio.png")
-
 
 
 if __name__ == "__main__":

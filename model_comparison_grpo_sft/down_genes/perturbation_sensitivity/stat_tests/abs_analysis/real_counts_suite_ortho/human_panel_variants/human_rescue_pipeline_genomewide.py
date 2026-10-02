@@ -69,29 +69,25 @@ ABS_DIR = Path("/Users/stepandolzhenko/Documents/AzithroGemma/model_comparison_g
                 "perturbation_sensitivity/stat_tests/abs_analysis")
 PMA_DIR = ABS_DIR / "pathway_module_analysis"
 sys.path.insert(0, str(ABS_DIR))
-import common_human as CH  # noqa: E402
-import rank_expr_model as rem  # noqa: E402
+import common_human as CH
+import rank_expr_model as rem
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-import common_real as CR  # noqa: E402
+import common_real as CR
 
 sys.path.insert(0, str(PMA_DIR))
 _saved_common = sys.modules.pop("common", None)
-import real_counts as RC  # noqa: E402
+import real_counts as RC
 if _saved_common is not None:
     sys.modules["common"] = _saved_common
 
 HERE = Path(__file__).parent
 AZI_JSONL = Path("/Users/stepandolzhenko/Downloads/inference_azi_results.jsonl")
 
-# rat's constants, unchanged (scripts/rescue_gene_pipeline.py:48-50)
 MIN_PCT = 0.1
 LOGFC_THRESHOLD = 0.25
 RECOVERY_RATIO_THRESHOLD = 0.9
 
-# All three human disease states. BPD7mo is the one-to-one analogue of rat's
-# single injury condition (and the one the down-gene branch is built on), the
-# other two are the same construction applied to the other outcomes.
 CONDITIONS = {"Acute26": "Acute", "BPD7mo": "BPD", "BPDPH7mo": "BPD-PH"}
 MIN_AZI_CELLS = 3
 
@@ -115,10 +111,6 @@ def mwu_padj(x1: np.ndarray, x2: np.ndarray, n_genes_total: int) -> np.ndarray:
 
 
 def main():
-    # CH.COUNTS_CSV is BPD-PH/GSE275938_compiled_counts.csv -- "BPD-PH" is the
-    # DIRECTORY name; the file is the whole GSE275938 compiled counts backing
-    # Term + Acute26 + BPD7mo + BPDPH7mo alike (common_human.py:9-13). One
-    # calibration curve for the whole corpus, not a BPD-PH-only fit.
     print("[calibration] fitting rank->expr model on GSE275938 compiled counts (all human conditions)...")
     model = rem.fit_from_csv(CH.COUNTS_CSV)
     n_genes_total = len(model.gene_names)
@@ -148,26 +140,19 @@ def main():
             dis_full = disease_mats[ct]
             ctrl_t8 = term_top800[ct]
             dis_t8 = CR.truncate_topk(dis_full)
-            # reconstruct is already <=800-nonzero by construction -- no truncation step
             azi_X = rem.reconstruct_batch([r["pred"] for r in arecs], model, CR.K)
 
-            # --- eligibility filter on FULL data (min.pct), rat convention ---
             pct_ctrl = (ctrl_full > 0).mean(axis=0)
             pct_dis = (dis_full > 0).mean(axis=0)
             pct_azi = (azi_X > 0).mean(axis=0)
-            # Seurat / rat's find_markers_candidates applies min.pct PER CONTRAST,
-            # over that contrast's own two groups -- not one filter reused for
-            # both arms.
             pass_min_pct_dis = (pct_ctrl >= MIN_PCT) | (pct_dis >= MIN_PCT)
             pass_min_pct_azi = (pct_ctrl >= MIN_PCT) | (pct_azi >= MIN_PCT)
 
-            # --- measurements in the matched K=800 budget ---
             lfc_dis_t8 = seurat_log2fc(dis_t8, ctrl_t8)
             padj_dis_t8 = mwu_padj(dis_t8, ctrl_t8, n_genes_total)
             lfc_azi_t8 = seurat_log2fc(azi_X, ctrl_t8)
             padj_azi_t8 = mwu_padj(azi_X, ctrl_t8, n_genes_total)
 
-            # --- disease arm untruncated: direct analogue of rat's HO columns ---
             lfc_dis_full = seurat_log2fc(dis_full, ctrl_full)
             padj_dis_full = mwu_padj(dis_full, ctrl_full, n_genes_total)
 

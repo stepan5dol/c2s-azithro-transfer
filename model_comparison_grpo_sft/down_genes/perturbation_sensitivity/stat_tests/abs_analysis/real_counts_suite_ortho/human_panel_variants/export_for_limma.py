@@ -63,15 +63,15 @@ ABS_DIR = Path("/Users/stepandolzhenko/Documents/AzithroGemma/model_comparison_g
                "perturbation_sensitivity/stat_tests/abs_analysis")
 PMA_DIR = ABS_DIR / "pathway_module_analysis"
 sys.path.insert(0, str(ABS_DIR))
-import common_human as CH  # noqa: E402
-import rank_expr_model as rem  # noqa: E402
+import common_human as CH
+import rank_expr_model as rem
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-import common_real as CR  # noqa: E402
+import common_real as CR
 
 sys.path.insert(0, str(PMA_DIR))
 _saved_common = sys.modules.pop("common", None)
-import real_counts as RC  # noqa: E402
+import real_counts as RC
 if _saved_common is not None:
     sys.modules["common"] = _saved_common
 
@@ -79,21 +79,10 @@ HERE = Path(__file__).parent
 SUITE = HERE.parent
 OUT = HERE / "reports" / "limma_input"
 CONDITION = "BPD7mo"
-COND_MODEL = "BPD"                 # the model's own name for this condition
+COND_MODEL = "BPD"
 
-# The other two cohorts run through exactly this code; only the row filter on
-# human_rescue_genomewide.csv and the key into the AZI predictions change. The
-# left column is the condition column of the genome-wide table, the right one is
-# what common_human.condition_of_age() calls the same cohort.
 COND_MODEL_OF = {"BPD7mo": "BPD", "BPDPH7mo": "BPD-PH", "Acute26": "Acute"}
-# BPD7mo keeps the unsuffixed directory it has always written to, so an existing
-# limma_sets run against it is untouched by this parameterization.
 OUT_OF = {"BPD7mo": OUT}
-# The control side has to move with the cohort instead of staying pinned to the
-# one this script was written for. BPD and BPD-PH are 7 months post-term, so
-# term-born is their matched control; ALI is a 26-week gestation lung, whose
-# matched control is the GW22 fetal tissue -- against term-born it would
-# contrast gestational age as much as injury.
 CONTROL_OF = {"BPD7mo": "term", "BPDPH7mo": "term", "Acute26": "he22"}
 AZI_JSONL = Path("/Users/stepandolzhenko/Downloads/inference_azi_results.jsonl")
 MIN_AZI_CELLS = 3
@@ -147,7 +136,6 @@ def main():
             print(f"  {ct}: no AZI arm, only {len(arecs)} predictions")
             azi = None
         else:
-            # reconstruct_batch is already <=800-nonzero by construction
             azi = rem.reconstruct_batch([r["pred"] for r in arecs], model, CR.K)[:, keep]
 
         arms = {"disease": (ctrl, dis,
@@ -156,10 +144,10 @@ def main():
             arms["azi"] = (dis, azi, CONDITION, "AZI-pred")
 
         for arm, (A, B, la, lb) in arms.items():
-            X = np.vstack([A, B]).astype(np.float32)           # cells x genes
+            X = np.vstack([A, B]).astype(np.float32)
             group = np.array([0] * A.shape[0] + [1] * B.shape[0])
             stem = ct if arm == "disease" else f"{ct}_azi"
-            X.T.tofile(OUT / f"{stem}.bin")                    # genes x cells, row-major
+            X.T.tofile(OUT / f"{stem}.bin")
             (OUT / f"{stem}.json").write_text(json.dumps({
                 "cell_type": ct, "arm": arm,
                 "n_genes": int(X.shape[1]), "n_cells": int(X.shape[0]),
@@ -171,12 +159,6 @@ def main():
             print(f"  {ct} [{arm}]: {X.shape[1]} genes x {X.shape[0]} cells "
                   f"({A.shape[0]} {la} + {B.shape[0]} {lb})")
 
-    # EVERY term of the five libraries -- same fix
-    # rat_export_for_limma.py made (see its comment): a pre-filtered input
-    # means camera can only ever return what the filter already decided, and
-    # that was the actual complaint about the autophagy-only version of this
-    # file. Downloaded once and cached; delete the cache to move library
-    # release.
     cache = OUT / "all_terms.json"
     if cache.exists():
         blob = json.loads(cache.read_text())

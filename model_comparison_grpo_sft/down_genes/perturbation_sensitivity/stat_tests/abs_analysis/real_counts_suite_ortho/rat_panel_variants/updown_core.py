@@ -36,15 +36,15 @@ from scipy.stats import mannwhitneyu
 ABS_DIR = Path("/Users/stepandolzhenko/Documents/AzithroGemma/model_comparison_grpo_sft/down_genes/"
                 "perturbation_sensitivity/stat_tests/abs_analysis")
 sys.path.insert(0, str(ABS_DIR))
-import common as C  # noqa: E402
-import plot_style as PS  # noqa: E402
-import rank_expr_model as rem  # noqa: E402
+import common as C
+import plot_style as PS
+import rank_expr_model as rem
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-import common_real as CR  # noqa: E402
+import common_real as CR
 
 sys.path.insert(0, str(Path(__file__).parent))
-import panel_sets as PSets  # noqa: E402
+import panel_sets as PSets
 
 HERE = Path(__file__).parent
 CSV_PATH = HERE.parent / "rat" / "recovered_rat_test_pairs.csv"
@@ -74,9 +74,6 @@ ARMS = {
            "short": "room air vs hyperoxia"},
 }
 
-# ─── display and output naming ────────────────────────────────────────────
-# Nothing a reader sees is a code name; the code names stay as the keys the
-# pairing registry and the gene workbooks use.
 CT_TITLE = {"gCap": "General capillary endothelial cell",
             "aCap": "Aerocyte capillary endothelial cell",
             "Pericyte": "Pericyte",
@@ -85,9 +82,6 @@ CT_TITLE = {"gCap": "General capillary endothelial cell",
 PANEL_TITLE = {"down": "hyperoxia-suppressed genes",
                "up": "hyperoxia-induced genes"}
 GATE_SLUG = {"full_list": "all_rescued", "gated": "dge_filtered"}
-# When set to one cell type, run() draws that cell type alone, with no pooled
-# panel -- pooling one cell type would just repeat it. Same construction, same
-# numbers; only the figure is separate. Set by the driver.
 ONLY_CT = None
 
 
@@ -177,8 +171,6 @@ def legend_handles_labels(expected):
     h = [plt.Rectangle((0, 0), 1, 1, facecolor=PS.HO_COLOR, edgecolor="#333333", alpha=0.85),
          plt.Rectangle((0, 0), 1, 1, facecolor="#bbbbbb", edgecolor="#333333", alpha=0.85),
          plt.Rectangle((0, 0), 1, 1, facecolor="#bbbbbb", edgecolor="#333333", alpha=0.85, hatch="///")]
-    # Short labels: the expected direction of each panel is a sentence for the
-    # caption, and spelling it out here made the legend row wider than the plot.
     return h, ["background", PANEL_TITLE["down"], PANEL_TITLE["up"]]
 
 
@@ -242,7 +234,7 @@ def run(arm_key: str, gate: str):
         raise SystemExit("no cell type passed the gates -- nothing to plot")
     if ONLY_CT is None:
         violins["POOLED"] = {k: np.concatenate([violins[ct][k] for ct in violins]) for k in X_POS}
-        gene_counts["POOLED"] = {"n_genes_down": -1, "n_genes_up": -1}  # panel is per-ct, not meaningful pooled
+        gene_counts["POOLED"] = {"n_genes_down": -1, "n_genes_up": -1}
 
     PS.apply()
     n_panels = len(violins)

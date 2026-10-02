@@ -37,7 +37,6 @@ from pipeline_short.common import (
 )
 from pipeline_short.stage1_sft_bidir import load_bpd_sentences
 
-# Concise prompt variant — drops the "low maintenance dose" framing.
 AZI_PERTURBATION = (
     "Azithromycin treatment (5 mg/kg of body weight, 3 times per week), "
     "for a duration of 10 weeks."

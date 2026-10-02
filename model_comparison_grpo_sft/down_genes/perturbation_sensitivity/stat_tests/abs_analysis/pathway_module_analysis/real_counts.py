@@ -27,11 +27,11 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent))
 _saved_common = sys.modules.pop("common", None)
-import load_data as L  # noqa: E402
+import load_data as L
 if _saved_common is not None:
     sys.modules["common"] = _saved_common
 
-CT_REAL_NAME = {"VEC": "Pulmonary venous EC"}  # model-side ct name -> real loader's celltype string
+CT_REAL_NAME = {"VEC": "Pulmonary venous EC"}
 
 
 def _normalize_log1p_cpm10k(X: np.ndarray) -> np.ndarray:

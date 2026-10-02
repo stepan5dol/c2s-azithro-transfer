@@ -37,22 +37,18 @@ import matplotlib.pyplot as plt
 HERE = Path(__file__).parent
 ABS_DIR = HERE.parent
 sys.path.insert(0, str(ABS_DIR))
-import plot_style as PS  # noqa: E402
+import plot_style as PS
 
 PANEL_A = HERE / "human_panel_variants/figures/human_delta_term_born_to_bpd_7mo_all_rescued_gcap.png"
 PANEL_B = HERE / "rat_panel_variants/figures/rat_delta_hyperoxia_to_azithromycin_all_rescued_gcap.png"
-# Written by build_panelC_dotplot.py in THIS folder. The previous panel came
-# from real_counts_suite/, where camera was run on autophagy panels only, so its
-# four rows could not say where autophagy stands relative to everything else.
-# This one is read out of the screen over all 8421 terms of the five libraries.
 PANEL_C = HERE / "deck_figures/camerapr_panelC_dotplot.png"
 
 OUT_DIR = HERE / "figures_main"
 FIG_NO = "Fig N"
 
-MARGIN = 0.32      # inches around the content; the letters sit in this gutter
-GAP_X = 0.10       # between A and B
-GAP_Y = 0.14       # between the two rows
+MARGIN = 0.32
+GAP_X = 0.10
+GAP_Y = 0.14
 
 CAPTION = (
     f"{FIG_NO}.  Measured and predicted single-cell perturbation deltas, each taken relative to "
@@ -94,7 +90,7 @@ def main():
 
     def put(path, x, y, w, h, letter):
         ax = fig.add_axes([x / fig_w, y / fig_h, w / fig_w, h / fig_h])
-        ax.imshow(mpimg.imread(path), aspect="auto")   # rect already matches the aspect
+        ax.imshow(mpimg.imread(path), aspect="auto")
         ax.set_axis_off()
         fig.text((x - 0.24) / fig_w, (y + h) / fig_h, letter, ha="left", va="top",
                  fontsize=15, fontweight="bold", color="#222222")
@@ -105,9 +101,6 @@ def main():
     put(PANEL_B, x0 + aw + GAP_X, row1_y, bw, bh, "B")
     put(PANEL_C, MARGIN + (content_w - cw) / 2, MARGIN, cw, ch, "C")
 
-    # The caption is NOT drawn on the canvas: a journal typesets it itself, a
-    # baked-in one cannot be edited or reset in the journal's font, and it
-    # duplicated the Results paragraph. It is written next to the figure instead.
     (OUT_DIR / "main_figure_caption.txt").write_text(CAPTION + "\n")
     print(f"-> {OUT_DIR / 'main_figure_caption.txt'}")
 

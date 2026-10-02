@@ -97,7 +97,6 @@ def main():
     print("=" * 100)
     rat_model = rem.fit(C.H5AD)
     print(f"[calibration] rat slope={rat_model.slope:.5f} intercept={rat_model.intercept:.4f} r2={rat_model.r2:.4f}")
-    # strict T=1.0 only (project convention, see feedback_strict_t1_only) -- not the t0.8 axis
     r = run_temperature("t1.0", C.RUNS["t1.0"], rat_model, C.load_cells, C.CT_ORDER, C.COND_ORDER,
                          C.MIN_N, C.FIG_DIR, "rat")
     if r:

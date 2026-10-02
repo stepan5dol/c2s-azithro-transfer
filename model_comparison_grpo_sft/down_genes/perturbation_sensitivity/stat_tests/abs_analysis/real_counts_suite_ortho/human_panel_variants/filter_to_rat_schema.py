@@ -60,12 +60,8 @@ def main():
     summary = []
     for (cond, ct), sub in df[df["rescued"]].groupby(["condition", "cell_type"], sort=False):
         table = sub.rename(columns=RENAME)[RAT_COLUMNS].copy()
-        # rat sorts by p_val_adj_HO ascending with a stable sort
         table = table.sort_values("p_val_adj_HO", kind="mergesort").reset_index(drop=True)
 
-        # NOT "rescue_gene.xlsx" like rat: rat's AZI columns come from real
-        # azithromycin-treated cells, these come from the model's predicted
-        # AZI counterfactual. The filename has to say so.
         out_path = OUT_DIR / f"human_{cond}_{ct}_rescue_predicted_azi.xlsx"
         table.to_excel(out_path, index=False, sheet_name="Sheet1")
 

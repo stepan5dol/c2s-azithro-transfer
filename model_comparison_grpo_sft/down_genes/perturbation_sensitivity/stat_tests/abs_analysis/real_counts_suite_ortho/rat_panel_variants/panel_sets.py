@@ -37,7 +37,7 @@ import openpyxl
 ABS_DIR = Path("/Users/stepandolzhenko/Documents/AzithroGemma/model_comparison_grpo_sft/down_genes/"
                 "perturbation_sensitivity/stat_tests/abs_analysis")
 sys.path.insert(0, str(ABS_DIR))
-import common as C  # noqa: E402
+import common as C
 
 GATES = ("full_list", "gated")
 RECOVERY_TYPES = ("Rescued_HO_down", "Rescued_HO_up")
@@ -47,7 +47,6 @@ GATE_DESC = {
     "gated": "p_val_adj_HO<0.05 AND p_val_adj_AZI>=0.05 (the panel used by every existing figure)",
 }
 
-# how each subset is expected to move, per arm -- used for figure labels only
 EXPECTED = {
     ("Rescued_HO_down", "HO"): "falls", ("Rescued_HO_down", "AZI"): "rises",
     ("Rescued_HO_up", "HO"): "rises", ("Rescued_HO_up", "AZI"): "falls",

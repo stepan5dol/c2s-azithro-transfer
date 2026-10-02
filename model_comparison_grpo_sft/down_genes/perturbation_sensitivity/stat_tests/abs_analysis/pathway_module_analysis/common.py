@@ -39,7 +39,6 @@ OUT_DIR.mkdir(exist_ok=True)
 TARGET_CELL_TYPES = {"gCap", "aCap", "Pulmonary venous EC", "Pericyte"}
 DISEASE_CONDITIONS = ["Acute26", "BPD7mo", "BPDPH7mo"]
 
-# dataset column (GSE275938_cell_metadata.csv) -> canonical condition
 DATASET_TO_CONDITION = {
     "Acute preterm injury 1": "Acute26",
     "BPD 1": "BPD7mo", "BPD 2": "BPD7mo",
@@ -79,6 +78,6 @@ def downsample_counts(X: np.ndarray, target_depth: int, rng: np.random.Generator
             out[i] = row
             continue
         p = (row / total).astype(np.float64)
-        p = p / p.sum()  # renormalize to guard against float64-cast overshoot
+        p = p / p.sum()
         out[i] = rng.multinomial(target_depth, p)
     return out

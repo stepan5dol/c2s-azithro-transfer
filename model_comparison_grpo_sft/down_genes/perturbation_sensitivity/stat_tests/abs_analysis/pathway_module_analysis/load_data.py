@@ -14,7 +14,7 @@ import scipy.sparse as sp
 import common as C
 
 sys.path.insert(0, str(C.BASE))
-from pipeline_short.common import remap_gene_names  # noqa: E402
+from pipeline_short.common import remap_gene_names
 
 
 def load_rat():

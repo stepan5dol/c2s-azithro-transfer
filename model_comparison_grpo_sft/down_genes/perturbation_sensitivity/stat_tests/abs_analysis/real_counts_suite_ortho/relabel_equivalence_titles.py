@@ -43,9 +43,9 @@ JOBS = [
     ]),
 ]
 
-SIZE_FACTOR = {"S1b_equivalence_human.png": 0.86}   # the longest title has to fit its panel
-INK = 0.6        # a pixel darker than this counts as ink
-GAP_FRAC = 0.02  # empty run wider than this share of the width separates titles
+SIZE_FACTOR = {"S1b_equivalence_human.png": 0.86}
+INK = 0.6
+GAP_FRAC = 0.02
 
 
 def title_band(dark: np.ndarray) -> tuple[int, int]:
@@ -54,7 +54,7 @@ def title_band(dark: np.ndarray) -> tuple[int, int]:
     start = int(rows[0])
     end = start
     for r in rows[1:]:
-        if r - end > 3:      # a clear gap: the titles have ended
+        if r - end > 3:
             break
         end = int(r)
     return start, end
@@ -86,7 +86,7 @@ def relabel(path: Path, titles: list[str]) -> None:
 
     rgb = im[..., :3].copy()
     pad = 4
-    rgb[max(top - pad, 0):bot + pad + 1, :, :] = 1.0     # paint the band out
+    rgb[max(top - pad, 0):bot + pad + 1, :, :] = 1.0
 
     dpi = 200.0
     fig = plt.figure(figsize=(w / dpi, h / dpi), dpi=dpi)
@@ -94,7 +94,6 @@ def relabel(path: Path, titles: list[str]) -> None:
     ax.imshow(rgb, interpolation="none")
     ax.set_xlim(0, w); ax.set_ylim(h, 0)
 
-    # cap height of the old titles -> point size at this dpi
     pt = (bot - top + 1) / dpi * 72.0 * 1.05 * SIZE_FACTOR.get(path.name, 1.0)
     y = (top + bot) / 2.0
     for (lo, hi), text in zip(spans, titles):

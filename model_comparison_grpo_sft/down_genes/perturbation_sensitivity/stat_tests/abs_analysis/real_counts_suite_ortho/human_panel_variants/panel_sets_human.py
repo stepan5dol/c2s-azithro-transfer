@@ -41,7 +41,7 @@ import pandas as pd
 HERE = Path(__file__).parent
 XLSX_DIR = HERE / "reports" / "rat_schema"
 CONDITIONS = ("Acute26", "BPD7mo", "BPDPH7mo")
-CONDITION = "BPD7mo"  # default when a caller does not say which
+CONDITION = "BPD7mo"
 CT_ORDER = ["gCap", "aCap", "Pericyte", "VEC"]
 
 GATES = ("full_list", "gated")
@@ -52,7 +52,6 @@ GATE_DESC = {
     "gated": "p_val_adj_HO<0.05 (Term->BPD) AND p_val_adj_AZI>=0.05 (AZI back at Term level)",
 }
 
-# how each subset is expected to move, per arm
 EXPECTED = {
     ("Rescued_HO_down", "disease"): "falls", ("Rescued_HO_down", "azi"): "rises",
     ("Rescued_HO_up", "disease"): "rises", ("Rescued_HO_up", "azi"): "falls",

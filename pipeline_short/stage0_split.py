@@ -37,9 +37,6 @@ REGISTRY_PATH = BASE / "cell_split_registry_short.csv"
 AUDIT_PATH    = PIPELINE_DIR / "data_audit.csv"
 SUMMARY_PATH  = PIPELINE_DIR / "split_summary.csv"
 
-# Per-condition cell counts from GSE275938_cell_metadata.csv (proверено), ALL
-# cell types before target-type filtering -- actual audit counts here will be
-# much smaller (only TARGET_HUMAN_CELL_TYPES survive), WARN below is expected.
 EXPECTED_BPD_COUNTS: dict[str, int] = {
     "Acute26":   3745,
     "BPD7mo":   14701,
@@ -48,21 +45,17 @@ EXPECTED_BPD_COUNTS: dict[str, int] = {
     "Term20d":   8228,
 }
 
-# Atlas types the plan explicitly decided NOT to map (no BPD analog)
 ATLAS_INTENTIONALLY_UNMAPPED: set[str] = {
     "OMD+ endo",
-    # epithelial / neuroendocrine
     "Squamous", "MUC5AC+ ASCL1+",
     "GHRL+ neuroendocrine", "GHRL+ NE precursor",
     "Pulmonary neuroendocrine", "Pulmonary NE precursor", "Interm neuroendocrine",
-    # immune non-BPD
     "Eosinophil",
     "HSC", "HSC/ELP", "CMP", "GMP", "MEP",
     "ILC2", "ILC3", "ILCP",
     "Cycling definitive erythroblast", "Definitive erythroblast", "Definitive erythrocyte",
     "Primitive erythroblast", "Primitive erythrocyte", "Definitive reticulocyte",
     "Megakaryocyte", "Platelet",
-    # mesenchymal / PNS / neural non-BPD
     "ASPN+ chondrocyte", "Interm chondrocyte", "Resting chondrocyte",
     "COL20A1+ Schwann", "Late Schwann", "Mid Schwann", "Proliferating Schwann", "Schwann precursor",
     "Early mesothelial", "Mid mesothelial", "Late mesothelial",
@@ -71,40 +64,21 @@ ATLAS_INTENTIONALLY_UNMAPPED: set[str] = {
     "Sympathoadrenal progenitor", "Chromaffin cell", "GHRL+ neuroendocrine"
 }
 
-# Mappings confirmed after human review — no remaining uncertain entries
 HARMONIZE_UNCERTAIN: set[str] = set()
 
-# ── scFID design ──────────────────────────────────────────────────────────────
-# Disabled: no more held-out carve-out for scFID/GRPO. All strata go through
-# the general train/valid/test rule below. Re-add entries here if a future
-# GRPO/scFID stage needs its own reserved pool.
 SCFID_RESERVATIONS: dict[tuple, int] = {}
-# Valid scFID transitions (src → tgt, gCap cell type per species)
 SCFID_TRANSITIONS = [
     ("rat",   "RA",      "HO",       "gCAP"),
     ("rat",   "HO",      "AZI",      "gCAP"),
     ("human", "Acute26", "BPDPH7mo", "gCap"),
 ]
-# General eval budget for all strata.
-# Test is proportional to stratum size, not flat: big gCap strata carry claim 1
-# (C2ST / distributional equivalence, needs power -> up to 150 test), tiny
-# strata (e.g. BPD7mo) can never carry claim 1 regardless of split and only
-# need a consistency-level test (floored at 10) -- they carry claim 2 (disease/
-# drug signal), which trains fine off a small pool. Formula:
-#   n_test = clip(round(TEST_FRACTION * n), TEST_FLOOR, TEST_CAP)
-# N_VALID_DEFAULT stays 2 (eval_steps monitoring reads valid.jsonl in full);
-# gCap strata get N_VALID_GCAP=5 to smooth the loss curve on the strata that
-# matter most. TRAIN_FLOOR raised 5->20: 5 real cells can't train a stratum
-# and can't give a non-garbage held-out R for equivalence either; avail =
-# n - TRAIN_FLOOR guarantees train hits the floor before test/valid are cut,
-# so this is enforced structurally, not just documented.
 TEST_FRACTION   = 0.15
 TEST_FLOOR      = 10
 TEST_CAP        = 150
 N_VALID_DEFAULT = 2
 N_VALID_GCAP    = 5
 GCAP_TYPES      = {"gCap", "gCAP"}
-TRAIN_FLOOR     = 20   # minimum cells kept in train per stratum
+TRAIN_FLOOR     = 20
 
 
 def _cond_to_source(cond: str) -> str:
@@ -121,7 +95,6 @@ class CellSplitRegistry:
         self.grpo_endo = load_grpo_endo_types()
         PIPELINE_DIR.mkdir(parents=True, exist_ok=True)
 
-    # ─── DATA LOADING ─────────────────────────────────────────────────────────
 
     def _load_rat(self) -> pd.DataFrame:
         print("Loading rat h5ad obs...")
@@ -135,7 +108,7 @@ class CellSplitRegistry:
             if cond not in TARGET_RAT_CONDITIONS:
                 continue
             raw_ct = str(row["cell_type_lab_fine"])
-            canon  = harmonize_cell_type(raw_ct)   # rat types passthrough
+            canon  = harmonize_cell_type(raw_ct)
             if canon not in TARGET_RAT_CELL_TYPES:
                 continue
             rows.append({
@@ -198,7 +171,7 @@ class CellSplitRegistry:
             if cond is None or cond not in TARGET_HUMAN_CONDITIONS:
                 continue
             raw_ct  = str(row["celltype"])
-            canon   = harmonize_cell_type(raw_ct)   # BPD types passthrough
+            canon   = harmonize_cell_type(raw_ct)
             if canon not in TARGET_HUMAN_CELL_TYPES:
                 continue
             lineage = str(row.get("celltype_lineage", "unknown"))
@@ -220,7 +193,6 @@ class CellSplitRegistry:
         dfs = [self._load_rat(), self._load_atlas(), self._load_bpd()]
         df  = pd.concat(dfs, ignore_index=True)
 
-        # grpo_endo vectorised (avoid slow apply)
         rat_endo   = self.grpo_endo["rat"]
         human_endo = self.grpo_endo["human"]
         df["grpo_endo"] = False
@@ -233,7 +205,6 @@ class CellSplitRegistry:
               f"(grpo_endo={df['grpo_endo'].sum():,})")
         return df
 
-    # ─── SANITY CHECKS ────────────────────────────────────────────────────────
 
     def check_s01_audit(self, df: pd.DataFrame) -> None:
         print("\n" + "═" * 64)
@@ -293,7 +264,6 @@ class CellSplitRegistry:
             .sort_values("n", ascending=False)
         )
 
-        # (a) Atlas types whose harmonized form is not a BPD canonical type
         unmapped = atlas_cts[~atlas_cts["cell_type"].isin(bpd_canon)]
         print(f"\n  (a) Atlas types NOT mapping to a BPD canon ({len(unmapped)} raw types):")
         stop_needed = False
@@ -311,7 +281,6 @@ class CellSplitRegistry:
             mark = "?" if uncert else " "
             print(f"    {mark} {raw:50s} n={n:5d}  {tag}")
 
-        # (b) BPD types with no atlas source after harmonization
         mapped_bpd = set(atlas_cts["cell_type"].unique())
         unmatched  = sorted(bpd_canon - mapped_bpd)
         bpd_counts = df[df["source"] == "bpd"].groupby("cell_type_raw").size()
@@ -320,7 +289,6 @@ class CellSplitRegistry:
             n = int(bpd_counts.get(ct, 0))
             print(f"      {ct:50s} n={n:5d}  (BPD-only, no atlas pairing)")
 
-        # (c) Uncertain ? mappings requiring human review
         uncertain_obs = HARMONIZE_UNCERTAIN & set(atlas_cts["cell_type_raw"].unique())
         if uncertain_obs:
             print(f"\n  (c) Uncertain ? mappings for human review ({len(uncertain_obs)}):")
@@ -352,7 +320,6 @@ class CellSplitRegistry:
         if fail:
             raise AssertionError("Barcode overlap between sources — check data loading.")
 
-    # ─── SPLIT ────────────────────────────────────────────────────────────────
 
     def build_split(self, df: pd.DataFrame) -> pd.DataFrame:
         print("\n" + "═" * 64)
@@ -369,22 +336,15 @@ class CellSplitRegistry:
 
             scfid_key = (source, condition, cell_type)
             if scfid_key in SCFID_RESERVATIONS:
-                # scFID source: reserve exactly N for test, rest to train, no valid
                 n_test  = min(SCFID_RESERVATIONS[scfid_key], n)
                 n_valid = 0
             else:
-                # General rule: test proportional to stratum size (clip(round(
-                # TEST_FRACTION*n), TEST_FLOOR, TEST_CAP)), valid fixed (higher
-                # for gCap). avail = n - TRAIN_FLOOR is computed first, so train
-                # hitting TRAIN_FLOOR is structurally guaranteed -- test/valid
-                # only ever eat into what's left after the floor.
                 val_target = N_VALID_GCAP if cell_type in GCAP_TYPES else N_VALID_DEFAULT
                 test_target = min(TEST_CAP, max(TEST_FLOOR, round(TEST_FRACTION * n)))
                 avail   = max(0, n - TRAIN_FLOOR)
                 n_test  = min(test_target,  avail)
                 n_valid = min(val_target, max(0, avail - n_test))
 
-            # layout in permuted index: [test | valid | train]
             labels = np.empty(n, dtype=object)
             labels[idx[:n_test]]                      = "test"
             labels[idx[n_test:n_test + n_valid]]      = "valid"
@@ -399,7 +359,6 @@ class CellSplitRegistry:
         print(f"  train={vc.get('train',0):,}  valid={vc.get('valid',0):,}  test={vc.get('test',0):,}")
         return registry
 
-    # ─── POST-SPLIT SANITY ────────────────────────────────────────────────────
 
     def check_s05_scfid(self, registry: pd.DataFrame) -> None:
         print("\n" + "═" * 64)
@@ -455,7 +414,6 @@ class CellSplitRegistry:
             print(f"  {flag} {name} = {overlap}")
             assert overlap == 0, f"Leakage: {name} = {overlap} barcodes"
 
-    # ─── SAVE + MAIN ──────────────────────────────────────────────────────────
 
     def save(self, registry: pd.DataFrame) -> None:
         cols = [
@@ -473,7 +431,6 @@ class CellSplitRegistry:
             .unstack(fill_value=0)
             .reset_index()
         )
-        # ensure all split columns exist
         for col in ("train", "valid", "test"):
             if col not in summary.columns:
                 summary[col] = 0
@@ -496,7 +453,6 @@ class CellSplitRegistry:
         print("STAGE 0 — Data Audit + CellSplitRegistry")
         print("=" * 64 + "\n")
 
-        # Phase 0a
         df = self.load_all()
         self.check_s01_audit(df)
         self.check_s02_config(df)
@@ -507,7 +463,6 @@ class CellSplitRegistry:
             print("\n✗ Blocking check(s) failed. Fix HARMONIZE and re-run.")
             sys.exit(1)
 
-        # Phase 0b
         registry = self.build_split(df)
         self.check_s05_scfid(registry)
         self.check_s06_isolation(registry)

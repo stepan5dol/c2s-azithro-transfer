@@ -50,20 +50,11 @@ import pandas as pd
 HERE = Path(__file__).parent
 INP = HERE / "reports" / "limma_input"
 OUT = HERE / "autophagy_program" / "reports"
-# Cohorts other than BPD7mo are exported by export_for_limma.py --condition into
-# their own input directory and land in their own table; BPD7mo keeps the paths
-# it has always used, so re-running it overwrites the same file as before.
 INP_OF = {"BPD7mo": INP}
 DEST_OF = {"BPD7mo": "bpd7mo_limma_sets.csv"}
 CTS = ["gCap", "aCap", "Pericyte", "VEC"]
-MIN_SET = 2           # whole terms, disease arm -- same reasoning
-MIN_SET_HALF = 2      # NOT a judgement call: two genes is the minimum for an
-                      # inter-gene correlation to exist. Nothing else is
-                      # filtered. An earlier version used 10, then 5 -- and 5
-                      # was picked after seeing that 10 dropped CMA, which is
-                      # choosing a threshold to produce a result. Set size is
-                      # printed on every mark instead, so a reader discounts a
-                      # small set directly rather than trusting a cutoff.
+MIN_SET = 2
+MIN_SET_HALF = 2
 FIXED_RHO = 0.01
 
 
@@ -104,7 +95,7 @@ def main():
               f"({meta['n_ref']} {meta['label_ref']} / {meta['n_test']} {meta['label_test']})")
 
         with cv.context():
-            ro.globalenv["y"] = Y                   # numpy2ri keeps the shape
+            ro.globalenv["y"] = Y
         ro.globalenv["gene_names"] = ro.StrVector(genes)
         ro.r("rownames(y) <- gene_names")
         ro.globalenv["grp"] = ro.FactorVector(
@@ -112,13 +103,6 @@ def main():
             levels=ro.StrVector(["ref", "test"]))
         ro.r("design <- model.matrix(~ grp)")
 
-        # Split each term by what DISEASE did to the member, and run the halves as
-        # separate sets. Under the AZI prompt the two halves must move opposite
-        # ways, so camera over the whole term nets them out -- the same
-        # cancellation the NES version of the deck figure had. The split is not
-        # circular: members are grouped by the disease log2FC (an independent
-        # variable) and the outcome measured is the AZI contrast. On the disease
-        # arm it WOULD be circular, so there the whole term is the only option.
         use = sets
         if meta["arm"] == "azi":
             use = {}
@@ -137,22 +121,9 @@ def main():
 
         ro.r("cam <- camera(y, idx, design, contrast=2, inter.gene.cor=NA)")
 
-        # cameraPR on the SAME log2FC whose median the figures plot, so that the
-        # position of a mark and its significance are the same quantity. camera
-        # above ranks on the moderated t (each gene weighted by its own
-        # variance), which is a different quantity and can disagree in sign with
-        # the median -- it did, in 2 of 20 cells. Ranking cameraPR on the log2FC
-        # removes that mismatch at the cost of the variance weighting.
-        # inter.gene.cor: limma's own default for BOTH camera and cameraPR is
-        # the FIXED value below (?camera: "with the default value
-        # inter.gene.cor=0.01, camera will rank biologically interpretable
-        # sets more highly... a useful compromise"), not a per-set estimate --
-        # per-set estimation is the NA mode camera() above still runs for
-        # its own Correlation/FDR columns, and it is the one the docs warn is
-        # unstable at small n. Standard settings here, nothing invented.
         a, b = Y[:, group == 0], Y[:, group == 1]
         lfc = (np.log2(np.expm1(b).mean(axis=1) + 1)
-               - np.log2(np.expm1(a).mean(axis=1) + 1))      # Seurat's log2FC
+               - np.log2(np.expm1(a).mean(axis=1) + 1))
         ro.globalenv["stat"] = ro.FloatVector(lfc)
         ro.r("names(stat) <- gene_names")
         ro.r(f"""

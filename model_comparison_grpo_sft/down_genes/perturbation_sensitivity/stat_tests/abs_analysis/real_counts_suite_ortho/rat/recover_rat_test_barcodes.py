@@ -40,7 +40,7 @@ import pandas as pd
 
 PIPELINE_SHORT = Path("/Users/stepandolzhenko/Documents/AzithroGemma/pipeline_short")
 sys.path.insert(0, str(PIPELINE_SHORT))
-import stage1_sft_bidir as S1  # noqa: E402
+import stage1_sft_bidir as S1
 
 OUT_DIR = Path(__file__).parent
 OUT_DIR.mkdir(exist_ok=True)

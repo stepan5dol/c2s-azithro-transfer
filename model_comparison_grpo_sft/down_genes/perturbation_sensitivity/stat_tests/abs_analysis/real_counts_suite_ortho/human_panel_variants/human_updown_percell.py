@@ -47,63 +47,47 @@ ABS_DIR = Path("/Users/stepandolzhenko/Documents/AzithroGemma/model_comparison_g
                 "perturbation_sensitivity/stat_tests/abs_analysis")
 PMA_DIR = ABS_DIR / "pathway_module_analysis"
 sys.path.insert(0, str(ABS_DIR))
-import common as C  # noqa: E402
-import common_human as CH  # noqa: E402
-import plot_style as PS  # noqa: E402
-import rank_expr_model as rem  # noqa: E402
+import common as C
+import common_human as CH
+import plot_style as PS
+import rank_expr_model as rem
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-import common_real as CR  # noqa: E402
+import common_real as CR
 
 sys.path.insert(0, str(PMA_DIR))
 _saved_common = sys.modules.pop("common", None)
-import load_data as L  # noqa: E402
-import real_counts as RC  # noqa: E402
+import load_data as L
+import real_counts as RC
 if _saved_common is not None:
     sys.modules["common"] = _saved_common
 
 sys.path.insert(0, str(Path(__file__).parent))
-import panel_sets_human as PSH  # noqa: E402
+import panel_sets_human as PSH
 
 HERE = Path(__file__).parent
 PAIRS_CSV = HERE / "recovered_human_test_pairs.csv"
 TEST_INFERENCE_PATH = Path("/Users/stepandolzhenko/Downloads/test_inference_results3.jsonl")
 PAIR_TYPE = "human_Acute26_BPD7mo"
-CONDITION = "BPD7mo"          # target state; set by build_disease_arms_trajectory.py
-SRC_LABEL = "Acute26"         # source state, for the axis label
-# "paired"           src cell is the real partner the prediction was generated from
-# "random_within_ct" src cell is drawn at random from a real pool of the same cell
-#                    type, because no pairing exists (Term cells are absent from the
-#                    pairing registry). Part of the output name: the same CONDITION
-#                    is built from two different baselines by two different drivers,
-#                    and without this they overwrite each other's figures.
+CONDITION = "BPD7mo"
+SRC_LABEL = "Acute26"
 PAIRING = "paired"
 
-# ─── display and output naming ────────────────────────────────────────────
-# CONDITION / SRC_LABEL stay as the code names the pairing registry and the
-# gene workbooks are keyed by; everything a reader sees comes from here.
-# All four are set together by the driver, per arm.
-PANEL_CONDITION = "BPD7mo"    # which workbook the gene panel is read from
+PANEL_CONDITION = "BPD7mo"
 SRC_TITLE = "acute preterm lung injury, GW26"
 TGT_TITLE = "bronchopulmonary dysplasia, 7 months postnatal"
-SRC_SHORT = "ALI GW26"        # axis label, must fit
+SRC_SHORT = "ALI GW26"
 TGT_SHORT = "BPD 7mo"
-SRC_FIG = TGT_FIG = None         # optional longer wording for the figure title only
-SRC_SLUG = "ali_gw26"         # file name
+SRC_FIG = TGT_FIG = None
+SRC_SLUG = "ali_gw26"
 TGT_SLUG = "bpd_7mo"
 GATE_SLUG = {"full_list": "all_rescued", "gated": "dge_filtered"}
 PANEL_TITLE = {"down": "disease-suppressed genes", "up": "disease-induced genes"}
-# Both gates are top-800 on every side; they differ only in how the gene panel
-# is selected (all rescued genes vs. additionally differential-expression
-# filtered). The top-800 truncation is the analysis unit, not a variant.
 CT_TITLE = {"gCap": "General capillary endothelial cell",
             "aCap": "Aerocyte capillary endothelial cell",
             "Pericyte": "Pericyte",
             "VEC": "Pulmonary venous endothelial cell",
             "POOLED": "All cell types pooled"}
-# When set to one cell type, run() draws that cell type alone, with no pooled
-# panel -- pooling one cell type would just repeat it. Same construction,
-# same numbers; only the figure is separate. Set by the driver.
 ONLY_CT = None
 
 SUBSETS = ("bg", "down", "up")
@@ -202,8 +186,6 @@ def legend_handles_labels():
     h = [plt.Rectangle((0, 0), 1, 1, facecolor=PS.HO_COLOR, edgecolor="#333333", alpha=0.85),
          plt.Rectangle((0, 0), 1, 1, facecolor="#bbbbbb", edgecolor="#333333", alpha=0.85),
          plt.Rectangle((0, 0), 1, 1, facecolor="#bbbbbb", edgecolor="#333333", alpha=0.85, hatch="///")]
-    # Short labels: the expected direction of each panel is a sentence for the
-    # caption, and spelling it out here made the legend row wider than the plot.
     return h, ["background", PANEL_TITLE["down"], PANEL_TITLE["up"]]
 
 
@@ -256,8 +238,6 @@ def run(gate, df, real_by_bc, pred_by_idx, model, ct_map):
                    "src_label": SRC_LABEL, "pairing": PAIRING})
         report_rows.append(st)
 
-    # Short labels only: the full condition names are what stretched the figure
-    # to three times the width of its own axes. They belong in the caption.
     fig.suptitle(f"Human, {SRC_FIG or SRC_SHORT} vs {TGT_FIG or TGT_SHORT}", fontsize=PS.FS_SUPTITLE)
     h, lab = legend_handles_labels()
     fig.legend(h, lab, loc="outside lower center", ncol=3, fontsize=PS.FS_LEGEND,

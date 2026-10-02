@@ -88,48 +88,24 @@ def build_completion_reverse(
     )
 
 
-# Reverse-completion Condition overrides: not needed in the minimally-viable
-# scope (no pure atlas-to-atlas temporal transitions remain in HUMAN_SFT).
 REV_CONDITION_OVERRIDE: dict[tuple, str] = {}
 
 HUMAN_SFT = [
-    # cross-source disease trajectory only (He22->Acute26->BPD7mo /
-    # Acute26->BPDPH7mo; NOT BPD7mo->BPDPH7mo, distinct disease states)
     ("He22", "Acute26"),
     ("Acute26", "BPD7mo"),
     ("Acute26", "BPDPH7mo"),
 ]
 
-# adaptive aug for rat (TRAIN ONLY): small populations get more augmentation.
-# SMALL/LARGE doubled vs the full pipeline's values (3/1 -> 6/2) to pull rat's
-# share of train toward parity with human (rat is the primary scientific
-# target -- HO/AZI rescue signal -- so its SFT budget shouldn't be diluted by
-# human simply having a larger raw cell pool in the target types).
-RAT_AUG_THRESHOLD = 200  # min(src, tgt) below this → AUG_SMALL, else AUG_LARGE
+RAT_AUG_THRESHOLD = 200
 RAT_AUG_SMALL = 6
 RAT_AUG_LARGE = 2
 
-# adaptive aug for human target types (TRAIN ONLY, mirrors rat scheme): all
-# target types are the ones we actually care about now, so none are capped at
-# N_PER_CT -- instead small populations get more augmentation rounds.
 HUMAN_AUG_THRESHOLD = 200
 HUMAN_AUG_SMALL = 3
 HUMAN_AUG_LARGE = 1
 
-# valid/test: no augmentation multiplier at all, regardless of species or
-# pool size. Eval sets need genuine real-cell diversity, not inflated volume
-# -- reshuffling a tiny (2-5 cell) stratum more than once mostly just produces
-# exact-duplicate forward pairs (verified empirically: 3 rounds over a 5-cell
-# rat pool gave 37.8% duplicate forward pairs in valid).
 EVAL_AUG = 1
 
-# Confirmed ambient-RNA contaminants in rat.ho.azi.integrated.h5ad (see
-# ambient_rna_analysis.md): uniform ~0.05-0.3 background in ALL 21 cell types
-# under RA/HO, jumping 5-15x specifically in AZI, with no accompanying rise in
-# Alas2 (the actual erythroid heme-synthesis marker) -- classic free-floating
-# globin-mRNA soup signature, not real per-cell biology. Excluded from the
-# rat gene pool before cell-sentence ranking so they can't be learned as a
-# condition shortcut.
 RAT_EXCLUDE_GENES = {"Hbb", "Hba-a1"}
 
 
@@ -141,8 +117,6 @@ def _pair_seed(split: str, pair_type: str, cell_type: str) -> int:
     key = f"{split}|{pair_type}|{cell_type}"
     return RANDOM_SEED + int(hashlib.md5(key.encode()).hexdigest()[:8], 16)
 
-
-# ── COUNT LOADING ─────────────────────────────────────────────────────────────
 
 def _make_batched(X, gene_names: list[str], batch_size: int = 2000) -> list[str]:
     """make_cell_sentences in batches to keep peak memory under ~300 MB/batch."""
@@ -167,14 +141,12 @@ def load_rat_sentences(barcodes: list[str]) -> dict[str, str]:
         X, genes = adata.X, adata.var_names.tolist()
     bc_idx = {bc: i for i, bc in enumerate(adata.obs_names)}
     del adata
-    # Drop confirmed ambient-RNA contaminants before ranking (RAT_EXCLUDE_GENES)
     keep_mask = [g not in RAT_EXCLUDE_GENES for g in genes]
     if sp.issparse(X):
         X = X[:, keep_mask]
     else:
         X = np.asarray(X)[:, keep_mask]
     genes = [g for g, k in zip(genes, keep_mask) if k]
-    # Rat gene names NOT remapped — title-case, species-specific
     needed = [bc for bc in barcodes if bc in bc_idx]
     rows   = [bc_idx[bc] for bc in needed]
     X_sub  = (X[rows].toarray() if sp.issparse(X) else np.array(X)[rows]).astype(np.float32)
@@ -194,7 +166,6 @@ def load_atlas_sentences(barcodes: list[str]) -> dict[str, str]:
         genes     = remap_gene_names(adata.var_names.tolist())
         obs_names = adata.obs_names.tolist()
     else:
-        # No embedded raw — match clean barcodes → ATLAS_RAW_PATH
         print("  No raw in clean atlas; loading ATLAS_RAW_PATH and matching barcodes...")
         adata_raw = anndata.read_h5ad(ATLAS_RAW_PATH)
         genes     = remap_gene_names(adata_raw.var_names.tolist())
@@ -202,7 +173,6 @@ def load_atlas_sentences(barcodes: list[str]) -> dict[str, str]:
         raw_obs   = adata_raw.obs_names.tolist()
         del adata_raw
 
-        # Match: clean "ACGT-SAMPLEID" → raw "ACGT-1" (drop trailing sample suffix)
         raw_bc_set  = set(raw_obs)
         raw_short   = {}
         for rbc in raw_obs:
@@ -270,8 +240,6 @@ def load_bpd_sentences(barcodes: list[str]) -> dict[str, str]:
     return bc_to_sent
 
 
-# ── PAIR BUILDING ─────────────────────────────────────────────────────────────
-
 def _build_pairs(
     src_bcs:       list[str],
     tgt_bcs:       list[str],
@@ -322,7 +290,6 @@ def _build_pairs(
         for i in range(n):
             src_cs = src_sent[src_a[i]]
             tgt_cs = tgt_sent[tgt_a[i]]
-            # pass raw cell_type so build_prompt resolves via cell_type_full()
             prompt = build_prompt(species, age_str_src, pma_weeks_src,
                                   cell_type, ct_broad, pert_str, src_cs)
             pairs.append({
@@ -342,8 +309,6 @@ def _build_pairs(
     return pairs
 
 
-# ── SFT BUILDER ───────────────────────────────────────────────────────────────
-
 class SFTBuilder:
 
     def __init__(self):
@@ -355,7 +320,6 @@ class SFTBuilder:
         reg.index = reg["barcode"]
         self.reg = reg
 
-    # ── pre-checks ───────────────────────────────────────────────────────────
 
     def _paired_types(self) -> set[str]:
         """All cell_types that appear in both sides of any transition."""
@@ -383,7 +347,7 @@ class SFTBuilder:
         for ct in sorted(unknown):
             print(f"  UNKNOWN: {ct!r} → add to FINE_TO_BROAD in common.py")
         if unknown and not allow_unknown:
-            return True  # blocking
+            return True
         return False
 
     def check_s1_2(self):
@@ -421,7 +385,6 @@ class SFTBuilder:
 
         return pd.DataFrame(rows)
 
-    # ── per-split pair builders ───────────────────────────────────────────────
 
     def _rat_pairs(self, split: str, sent: dict[str, str]) -> list[dict]:
         reg_s = self.reg[(self.reg["source"]=="rat") & (self.reg["split"]==split)]
@@ -491,7 +454,6 @@ class SFTBuilder:
                 ))
         return pairs
 
-    # ── post-build sanity ────────────────────────────────────────────────────
 
     @staticmethod
     def _dedup_reverse(pairs: list[dict]) -> list[dict]:
@@ -563,7 +525,6 @@ class SFTBuilder:
             h = len(RESCUED_HUMAN & tokens)
             print(f"  human: {h}/{len(RESCUED_HUMAN)} rescued genes found in sampled sentences")
 
-    # ── save & run ───────────────────────────────────────────────────────────
 
     @staticmethod
     def _save(examples: list[dict], path: Path):
@@ -576,13 +537,11 @@ class SFTBuilder:
         print(f"  Saved: {path}  ({len(examples):,} examples)")
 
     def run(self):
-        # [S1-1] Fine-to-broad coverage (runs on registry, no I/O needed)
         if self.check_s1_1():
             print("\n✗ Fix FINE_TO_BROAD in common.py and re-run.")
             sys.exit(1)
         self.check_s1_2()
 
-        # [S1-0] Pairing coverage report
         print("\n[S1-0] Building pairing coverage report...")
         cov = self._pairing_report()
         cov.to_csv(UNPAIRED_PATH, index=False)
@@ -590,7 +549,6 @@ class SFTBuilder:
         n_unpaired = cov[~(cov["in_src"] & cov["in_tgt"])].shape[0]
         print(f"  {n_paired} paired (src∩tgt), {n_unpaired} unpaired → {UNPAIRED_PATH}")
 
-        # Load all cell sentences once
         print("\n--- Loading counts and building cell sentences ---")
         rat_bcs = self.reg[self.reg["source"]=="rat"].index.tolist()
         atl_bcs = self.reg[self.reg["source"]=="atlas"].index.tolist()
@@ -603,10 +561,8 @@ class SFTBuilder:
         print(f"\n  Sentences: rat={len(rat_s):,}  atlas={len(atl_s):,}  "
               f"bpd={len(bpd_s):,}")
 
-        # [S1-5] Rescued gene coverage
         self._check_s1_5(rat_s, {**atl_s, **bpd_s})
 
-        # Build pairs per split
         print("\n--- Building pairs per split ---")
         splits: dict[str, list[dict]] = {}
         blocking = False
@@ -632,7 +588,6 @@ class SFTBuilder:
             print("\n✗ Blocking check(s) failed. Fix and re-run.")
             sys.exit(1)
 
-        # [S1-8] Leakage (barcode level via registry)
         train_bc = set(self.reg[self.reg["split"]=="train"].index)
         test_bc  = set(self.reg[self.reg["split"]=="test"].index)
         if train_bc & test_bc:
@@ -640,11 +595,9 @@ class SFTBuilder:
             sys.exit(1)
         print(f"\n[S1-8] ✓ train ∩ test barcodes = 0")
 
-        # [S1-7] Pair counts: transition → cell_type (train only, for readability)
         from collections import defaultdict
         ct_counts: dict[tuple, int] = defaultdict(int)
         for ex in splits["train"]:
-            # extract cell_type from prompt line "Cell type: <full> (<broad>)"
             for line in ex["prompt"].splitlines():
                 if line.startswith("Cell type:"):
                     ct_label = line.split("Cell type:")[1].strip()
@@ -667,7 +620,6 @@ class SFTBuilder:
             for ct, n in ct_rows:
                 print(f"    {ct:<55} {n:>6}")
 
-        # [S1-6] Sample prompt
         for spl in ["train", "valid", "test"]:
             if splits[spl]:
                 ex = splits[spl][0]
@@ -676,7 +628,6 @@ class SFTBuilder:
                 print(f"  completion[:100]: {ex['completion'][:100]}...")
                 break
 
-        # Save
         print("\n--- Saving JSONL ---")
         for spl, examples in splits.items():
             self._save(examples, SFT_DIR / f"{spl}.jsonl")

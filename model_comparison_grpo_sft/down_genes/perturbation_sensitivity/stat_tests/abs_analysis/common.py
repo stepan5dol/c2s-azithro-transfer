@@ -107,11 +107,6 @@ def rescued_genes(species: str = "rat") -> set[str]:
     return set(json.load(open(RESCUED_DOWN_JSON))[species])
 
 
-# Per-cell-type DGE rescue gene lists (Seurat FindMarkers output per cell_type,
-# HO vs baseline + AZI vs baseline, with a recovery_type call). Replaces the
-# single global 25-gene rescued_genes() above, which applied the SAME gene set
-# to every cell type regardless of that cell type's own DGE -- gCap's rescue
-# panel is not aCap's rescue panel.
 DGE_XLSX = {
     "gCap":     BASE / "gcap rescue gene.xlsx",
     "aCap":     BASE / "acap resuce gene.xlsx",
@@ -140,7 +135,6 @@ def load_celltype_rescue_genes(max_p_ho: float = 0.05, min_p_azi: float = 0.05) 
         ws = wb["Sheet1"]
         rows = list(ws.iter_rows(values_only=True))
         header, data = rows[0], rows[1:]
-        # header: gene, avg_log2FC_HO, p_val_adj_HO, avg_log2FC_AZI, p_val_adj_AZI, recovery_ratio, recovery_type
         genes = {
             r[0] for r in data
             if r[6] == "Rescued_HO_down"
@@ -159,10 +153,6 @@ def reconstruct_group(group: list[dict], model: rem.RankExprModel):
     pred_X = rem.reconstruct_batch([c["pred"] for c in group], model, K)
     return unexp_X, gt_X, pred_X
 
-
-# ══════════════════════════════════════════════════════════════
-# Statistical primitives
-# ══════════════════════════════════════════════════════════════
 
 def unpaired_perm_test(a: np.ndarray, b: np.ndarray, statfn=None, n_perm: int = 5000, seed: int = SEED):
     """Two-sided permutation test on statfn(a) - statfn(b) (default: mean).
@@ -252,14 +242,6 @@ def cdist(X: np.ndarray, Y: np.ndarray, metric: str = "euclidean") -> np.ndarray
     return _cdist(X, Y, metric=metric)
 
 
-# ══════════════════════════════════════════════════════════════
-# Shared PCA space -- ALL distance-based tests (A2/A3/A6/B4/UMAP-QC) run
-# here instead of on raw ~1000-2000 dim filtered gene vectors, which are
-# dominated by a handful of very highly (and noisily) expressed genes.
-# PCA is fit on gt only ("GT-fit"), pred is projected via .transform, same
-# convention as umap_qc.py.
-# ══════════════════════════════════════════════════════════════
-
 def fit_pca_shared(gt_X: np.ndarray, pred_X: np.ndarray, n_components: int = 30, seed: int = SEED):
     from sklearn.decomposition import PCA
     n_comp = max(2, min(n_components, len(gt_X) - 1, gt_X.shape[1]))
@@ -287,8 +269,8 @@ def forest_plot(ax, labels: list[str], values: list[float], los: list[float], hi
     filled = filled if filled is not None else [True] * len(labels)
     for i, (v, lo, hi, f) in enumerate(zip(values, los, his, filled)):
         color = "#4c72b0"
-        xerr = [[max(v - lo, 0)], [max(hi - v, 0)]]  # bootstrap CI can occasionally sit above/near
-        ax.errorbar([v], [y[i]], xerr=xerr, fmt="o",           # the point estimate (high-dim norm bias)
+        xerr = [[max(v - lo, 0)], [max(hi - v, 0)]]
+        ax.errorbar([v], [y[i]], xerr=xerr, fmt="o",
                     color=color, mfc=color if f else "white", mec=color,
                     markersize=7, capsize=3, lw=1.5)
     ax.axvline(ref, color="gray", lw=1, ls="--")
@@ -312,19 +294,15 @@ def knn_mixing_lisi(gt_emb: np.ndarray, pred_emb: np.ndarray, k: int = 30) -> np
     labels = np.array([0] * len(gt_emb) + [1] * len(pred_emb))
     k_eff = min(k, len(pooled) - 1)
     nn = NearestNeighbors(n_neighbors=k_eff + 1).fit(pooled)
-    _, idx = nn.kneighbors(pooled[len(gt_emb):])  # neighbours of each pred point
+    _, idx = nn.kneighbors(pooled[len(gt_emb):])
     lisi = np.empty(len(pred_emb))
     for i, neighbours in enumerate(idx):
-        neighbours = neighbours[neighbours != (len(gt_emb) + i)]  # drop self
+        neighbours = neighbours[neighbours != (len(gt_emb) + i)]
         lab = labels[neighbours]
         p = np.bincount(lab, minlength=2) / len(lab)
         lisi[i] = 1.0 / (p ** 2).sum() if (p ** 2).sum() > 0 else float("nan")
     return lisi
 
-
-# ══════════════════════════════════════════════════════════════
-# Delta (perturbation effect) helpers, shared by B1/B2/B6/A5
-# ══════════════════════════════════════════════════════════════
 
 def delta_and_mask(unexp_X: np.ndarray, other_X: np.ndarray):
     """delta = other - unexposed (abs expr units); mask = genes 'in play' for

@@ -117,11 +117,11 @@ def fit_from_csv(
     import pandas as pd
 
     with open(counts_csv_path) as f:
-        total_rows = sum(1 for _ in f) - 1  # minus header
+        total_rows = sum(1 for _ in f) - 1
 
     rng = np.random.default_rng(seed)
     chosen = set(rng.choice(total_rows, size=min(n_cells, total_rows), replace=False).tolist())
-    skip = lambda i: i != 0 and (i - 1) not in chosen  # noqa: E731 -- pandas skiprows callable
+    skip = lambda i: i != 0 and (i - 1) not in chosen
 
     df = pd.read_csv(counts_csv_path, skiprows=skip, index_col=id_col)
     X = df.to_numpy(dtype=np.float64)

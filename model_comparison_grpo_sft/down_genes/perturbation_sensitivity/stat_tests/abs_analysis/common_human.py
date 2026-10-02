@@ -31,9 +31,9 @@ from pathlib import Path
 
 BASE = Path("/Users/stepandolzhenko/Documents/AzithroGemma")
 sys.path.insert(0, str(BASE))
-from pipeline.common import BPD_COUNTS_PATH  # noqa: E402
+from pipeline.common import BPD_COUNTS_PATH
 
-from common import (  # noqa: E402  -- reuse every species-agnostic primitive as-is
+from common import (
     K, MIN_N, SEED, RUNS,
     dedupe_first, reconstruct_group, filtered_gene_domain, pairwise_dist, cdist,
     fit_pca_pooled, fit_pca_shared, centroid_distance, centroid_perm_test,
@@ -44,15 +44,6 @@ from common import (  # noqa: E402  -- reuse every species-agnostic primitive as
 
 COUNTS_CSV = BPD_COUNTS_PATH
 
-# Human-native ortholog translation of the rat AZI-rescue gene panel (160
-# genes, train-after-grpo-analysis/rescued_human_genes.txt -- see
-# rescued_orthologs-2.csv for the rat_symbol -> human_symbol provenance).
-# Global across cell types (unlike the rat side's per-cell-type xlsx panels)
-# since there is no per-cell-type human DGE behind this list, just orthology.
-# No AZI arm exists for human -- this panel is used to ask whether these
-# disease-relevant genes move coherently (vs. background) across each
-# disease-trajectory transition (Acute / BPD / BPD-PH), each measured against
-# its own baseline exactly as encoded in the record's "Unexposed:" field.
 RESCUED_HUMAN_PATH = BASE / "train-after-grpo-analysis" / "rescued_human_genes.txt"
 
 

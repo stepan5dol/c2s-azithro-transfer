@@ -13,9 +13,6 @@ import pandas as pd
 import scanpy as sc
 import scipy.sparse as sp
 
-# ══════════════════════════════════════════════════════════════════
-# ПУТИ
-# ══════════════════════════════════════════════════════════════════
 BASE = Path("/Users/stepandolzhenko/Documents/AzithroGemma")
 
 RAT_PATH          = BASE / "rat.ho.azi.integrated.h5ad"
@@ -37,11 +34,6 @@ RANDOM_SEED = 42
 N_PER_CT    = 50
 N_AUGMENT   = 2
 
-# ══════════════════════════════════════════════════════════════════
-# TARGET CELL TYPES — minimally-viable scope: matches GRPO_ENDO_RAT /
-# GRPO_ENDO_HUMAN exactly (pipeline/stage2_grpo_pairs.py) so SFT and GRPO
-# share the same cell-type scope. Canonical (post-harmonize) labels.
-# ══════════════════════════════════════════════════════════════════
 TARGET_RAT_CELL_TYPES: set[str] = {"gCAP", "aCAP", "Peri", "VEC"}
 TARGET_HUMAN_CELL_TYPES: set[str] = {
     "gCap", "aCap", "Pulmonary venous EC", "Pericyte",
@@ -49,10 +41,6 @@ TARGET_HUMAN_CELL_TYPES: set[str] = {
 TARGET_RAT_CONDITIONS: set[str] = {"RA", "HO", "AZI"}
 TARGET_HUMAN_CONDITIONS: set[str] = {"He22", "Acute26", "BPD7mo", "BPDPH7mo"}
 
-# ══════════════════════════════════════════════════════════════════
-# GENE ALIASES (устаревшие → канонические)
-# Регистр генов НЕ меняем: крыса/мышь title-case, человек upper.
-# ══════════════════════════════════════════════════════════════════
 GENE_ALIASES: dict[str, list[str]] = {
     "H1-0":      ["H1F0"],
     "H1-5":      ["H1F5", "HIST1H1B", "H1B"],
@@ -78,7 +66,6 @@ GENE_ALIASES: dict[str, list[str]] = {
     "SNRPEL1":   ["SNRPE"],
 }
 
-# Заглушка — пополняется после Stage 2 [S2-8] аудита при необходимости
 GENE_ALIASES_EXTRA: dict[str, list[str]] = {}
 
 ALIAS_TO_CANONICAL: dict[str, str] = {}
@@ -91,19 +78,10 @@ def remap_gene_names(gene_names) -> list[str]:
     return [ALIAS_TO_CANONICAL.get(g, g) for g in gene_names]
 
 
-# ══════════════════════════════════════════════════════════════════
-# RESCUED GENES (выверенные .txt, 159 rat / 161 human)
-# ══════════════════════════════════════════════════════════════════
 RESCUED_RAT   = set(RESCUED_RAT_PATH.read_text().splitlines()) - {""}
 RESCUED_HUMAN = set(RESCUED_HUMAN_PATH.read_text().splitlines()) - {""}
 
-# ══════════════════════════════════════════════════════════════════
-# ABBREV_TO_FULL — аббревиатура → читаемое имя типа клетки
-# Хранится с ключами в ВЕРХНЕМ регистре; lookup через cell_type_full(ct).
-# .upper() применяется ТОЛЬКО к ключам словаря, никогда к генам.
-# ══════════════════════════════════════════════════════════════════
 _ABBREV_TO_FULL_RAW: dict[str, str] = {
-    # --- Rat ---
     "AM":        "alveolar macrophage",
     "AEC":       "arterial endothelial cell",
     "aCAP":      "aerocyte capillary endothelial cell",
@@ -128,7 +106,6 @@ _ABBREV_TO_FULL_RAW: dict[str, str] = {
     "VEC":       "vascular endothelial cell",
     "aCap":      "aerocyte capillary endothelial cell",
     "gCap":      "general capillary endothelial cell",
-    # --- BPD canonical (посимвольно из GSE275938_cell_metadata.csv) ---
     "Alveolar FB":            "alveolar fibroblast",
     "Adventitial FB":         "adventitial fibroblast",
     "Alveolar MyoFB":         "alveolar myofibroblast",
@@ -158,7 +135,6 @@ _ABBREV_TO_FULL_RAW: dict[str, str] = {
     "NKT Cell":               "NKT cell",
     "Plasma cell":            "plasma cell",
     "Activated FB":           "activated fibroblast",
-    # --- Atlas (He et al.) ---
     "Aerocyte":                      "aerocyte capillary endothelial cell",
     "Early cap":                     "early capillary endothelial cell",
     "Mid cap":                       "mid capillary endothelial cell",
@@ -242,7 +218,6 @@ _ABBREV_TO_FULL_RAW: dict[str, str] = {
     "CD5+ CCL22- mature B":          "CD5+ CCL22- mature B cell",
     "CD5- Mature B":                 "CD5- mature B cell",
     "Immature B":                    "immature B cell",
-    # --- Mouse ---
     "Col13a1+ fibroblast": "Col13a1+ fibroblast",
     "Col14a1+ fibroblast": "Col14a1+ fibroblast",
     "Pericyte 1":          "pericyte type 1",
@@ -261,7 +236,6 @@ _ABBREV_TO_FULL_RAW: dict[str, str] = {
     "AT2 1":               "alveolar type 2 cell type 1",
     "AT2 2":               "alveolar type 2 cell type 2",
     "Mesothelial":         "mesothelial cell",
-    # --- misc ---
     "Endo":      "endothelial cell",
     "Lymph":     "lymphatic endothelial cell",
     "Cap":       "capillary endothelial cell",
@@ -282,7 +256,6 @@ _ABBREV_TO_FULL_RAW: dict[str, str] = {
 
 ABBREV_TO_FULL: dict[str, str] = {k.upper(): v for k, v in _ABBREV_TO_FULL_RAW.items()}
 
-# Заглушка — пополняется после [S1-2]/[S3-6] аудита
 ABBREV_TO_FULL_EXTRA: dict[str, str] = {}
 
 
@@ -292,12 +265,7 @@ def cell_type_full(ct: str) -> str:
     return ABBREV_TO_FULL.get(key, ABBREV_TO_FULL_EXTRA.get(key, ct))
 
 
-# ══════════════════════════════════════════════════════════════════
-# FINE_TO_BROAD — тип клетки → широкая категория для промпта
-# Ключи в ВЕРХНЕМ регистре; lookup через cell_type_broad(ct).
-# ══════════════════════════════════════════════════════════════════
 _FINE_TO_BROAD_RAW: dict[str, str] = {
-    # --- Rat ---
     "AT1": "epithelial", "AT2": "epithelial",
     "Club": "epithelial", "Ciliated": "epithelial",
     "AEC": "endothelial",
@@ -310,7 +278,6 @@ _FINE_TO_BROAD_RAW: dict[str, str] = {
     "AM": "macrophage", "IM": "macrophage",
     "DC": "myeloid", "Mono": "myeloid", "Neu": "myeloid",
     "B cell": "lymphocyte", "T cell": "lymphocyte",
-    # --- BPD canonical ---
     "aCap": "endothelial", "gCap": "endothelial",
     "abCap": "endothelial",
     "Arterial EC": "endothelial",
@@ -342,7 +309,6 @@ _FINE_TO_BROAD_RAW: dict[str, str] = {
     "NKT Cell": "lymphocyte",
     "Plasma cell": "lymphocyte",
     "Activated FB": "fibroblast",
-    # --- Atlas (He et al.) ---
     "Aerocyte": "endothelial",
     "Early cap": "endothelial", "Mid cap": "endothelial", "Late cap": "endothelial",
     "Arterial endo": "endothelial", "GRIA2+ arterial endo": "endothelial",
@@ -381,7 +347,6 @@ _FINE_TO_BROAD_RAW: dict[str, str] = {
     "CD56bright NK": "lymphocyte", "Cycling NK": "lymphocyte", "Intermediate NK": "lymphocyte",
     "CD5+ CCL22+ mature B": "lymphocyte", "CD5+ CCL22- mature B": "lymphocyte",
     "CD5- Mature B": "lymphocyte", "Immature B": "lymphocyte",
-    # --- Mouse ---
     "Col13a1+ fibroblast": "fibroblast", "Col14a1+ fibroblast": "fibroblast",
     "Pericyte 1": "mural", "Pericyte 2": "mural",
     "Neut 1": "myeloid", "Neut 2": "myeloid",
@@ -392,7 +357,6 @@ _FINE_TO_BROAD_RAW: dict[str, str] = {
     "Mast Ba2": "myeloid",
     "AT2 1": "epithelial", "AT2 2": "epithelial",
     "Mesothelial": "mesothelial",
-    # --- misc ---
     "Art": "endothelial", "Cap": "endothelial", "Cap-a": "endothelial",
     "Lymph": "endothelial", "Vein": "endothelial",
     "Myofibroblast": "fibroblast",
@@ -403,7 +367,6 @@ _FINE_TO_BROAD_RAW: dict[str, str] = {
 
 FINE_TO_BROAD: dict[str, str] = {k.upper(): v for k, v in _FINE_TO_BROAD_RAW.items()}
 
-# Заглушка — пополняется после [S1-1]/[S3-6] аудита
 FINE_TO_BROAD_EXTRA: dict[str, str] = {}
 
 
@@ -413,9 +376,6 @@ def cell_type_broad(ct: str) -> str:
     return FINE_TO_BROAD.get(key, FINE_TO_BROAD_EXTRA.get(key, "unknown"))
 
 
-# ══════════════════════════════════════════════════════════════════
-# CONDITION MAPPINGS — сырые метки → канонические condition-ключи
-# ══════════════════════════════════════════════════════════════════
 DATASET_TO_CONDITION: dict[str, str] = {
     "Term infant 1":          "Term0d",
     "Term infant 2":          "Term20d",
@@ -439,9 +399,6 @@ SPECIES_STR: dict[str, str] = {
     "human": "Homo sapiens",
 }
 
-# ══════════════════════════════════════════════════════════════════
-# CONDITION METADATA — age_str и pma_weeks по canonical condition
-# ══════════════════════════════════════════════════════════════════
 COND_META: dict[tuple, dict] = {
     ("rat",   "RA"):      {"age_str": "postnatal day 14",                                       "pma_weeks": 52},
     ("rat",   "HO"):      {"age_str": "postnatal day 14",                                       "pma_weeks": 52},
@@ -460,17 +417,10 @@ COND_META: dict[tuple, dict] = {
     ("mouse", "P14"):     {"age_str": "postnatal day 14",                                       "pma_weeks": 52},
 }
 
-# ══════════════════════════════════════════════════════════════════
-# PERTURBATION_STR — ЕДИНАЯ таблица для SFT и GRPO
-# Ключ: (species, src_condition, tgt_condition) — канонические строки.
-# Мышь: (species, src_oxy, src_age, tgt_oxy, tgt_age) — уже канональны.
-# ══════════════════════════════════════════════════════════════════
 PERTURBATION_STR: dict[tuple, str] = {
-    # --- Rat ---
     ("rat", "RA",  "HO"):  "Hyperoxia exposure from birth to postnatal day 14.",
     ("rat", "HO",  "AZI"): "Azithromycin treatment (30 mg/kg IP at P7, P10, P13) during after exposure to 85% O2 for 14 days.",
 
-    # --- Human fetal (atlas temporal) ---
     ("human", "He15", "He18"): "Three weeks of fetal lung development (GW15 → GW18).",
     ("human", "He15", "He20"): "Five weeks of fetal lung development (GW15 → GW20).",
     ("human", "He15", "He22"): "Seven weeks of fetal lung development (GW15 → GW22).",
@@ -478,7 +428,6 @@ PERTURBATION_STR: dict[tuple, str] = {
     ("human", "He18", "He22"): "Four weeks of fetal lung development (GW18 → GW22).",
     ("human", "He20", "He22"): "Two weeks of fetal lung development (GW20 → GW22).",
 
-    # --- Human disease trajectory (cross-source) ---
     ("human", "He22", "Acute26"): (
         "Acute preterm lung injury at gestational week 26, "
         "compared to normal late canalicular fetal lung (GW22)."
@@ -495,7 +444,6 @@ PERTURBATION_STR: dict[tuple, str] = {
         "Disease progression to BPD with pulmonary hypertension."
     ),
 
-    # --- Mouse (SFT only) ---
     ("mouse", "Normoxia",  "P3",  "Normoxia",  "P7"):  "Four days of normal postnatal lung development in mouse (P3 → P7).",
     ("mouse", "Normoxia",  "P7",  "Normoxia",  "P14"): "Seven days of normal postnatal lung development in mouse (P7 → P14).",
     ("mouse", "Normoxia",  "P3",  "Hyperoxia", "P3"):  "Hyperoxia exposure from birth to postnatal day 3 in mouse.",
@@ -505,20 +453,12 @@ PERTURBATION_STR: dict[tuple, str] = {
     ("mouse", "Hyperoxia", "P7",  "Hyperoxia", "P14"): "Seven days of continued hyperoxia exposure in mouse (P7 → P14).",
 }
 
-# AZI counterfactual — inference-only Stage 4 (human clinical translation)
 AZI_PERTURBATION = (
     "Oral azithromycin treatment (5 mg/kg of body weight, 3 times per week). "
     "Administered as a low maintenance dose for a duration of 10 weeks."
 )
 
-# ══════════════════════════════════════════════════════════════════
-# HARMONIZE — сырые atlas-метки → канонический cell_type
-# Значения посимвольно из GSE275938_cell_metadata.csv.
-# BPD-метки (already canonical) — passthrough, не входят в словарь.
-# Rat-метки — не трогаем.
-# ══════════════════════════════════════════════════════════════════
 HARMONIZE: dict[str, str] = {
-    # --- Endothelial ---
     "Aerocyte":                    "aCap",
     "Early cap":                   "gCap",
     "Mid cap":                     "gCap",
@@ -529,9 +469,7 @@ HARMONIZE: dict[str, str] = {
     "Lymphatic endo":              "Lymphatic",
     "Intermediate lymphatic endo": "Lymphatic",
     "SCG3+ lymphatic endothelial": "Lymphatic",
-    # "OMD+ endo": нет BPD-аналога → не маппим
 
-    # --- Epithelial ---
     "AT1":                         "AT1",
     "AT2":                         "AT2",
     "Ciliated":                    "Multiciliated",
@@ -553,9 +491,7 @@ HARMONIZE: dict[str, str] = {
     "Early stalk":                 "Basal",
     "Mid stalk":                   "Basal",
     "Late stalk":                  "Basal",
-    # без BPD-аналога: airway progenitor*, NE/neuroendocrine*, MUC5AC+ ASCL1+, Squamous
 
-    # --- Immune ---
     "APOE+ MΦ1":             "Alveolar Macrophage",
     "APOE+ MΦ2":             "Alveolar Macrophage",
     "SPP1+ MΦ":              "Alveolar Macrophage",
@@ -601,10 +537,7 @@ HARMONIZE: dict[str, str] = {
     "CD5+ CCL22+ mature B":  "B Cell",
     "CD5+ CCL22- mature B":  "B Cell",
     "CD5- Mature B":         "B Cell",
-    # без BPD-аналога: Eosinophil, HSC*, CMP/GMP/MEP, ILC2/3/ILCP,
-    #   эритроид/ретикулоцит/мегакариоцит, Schwann*, мезотелий*, прогениторы дых. путей
 
-    # --- Mesenchymal ---
     "Adventitial fibro":  "Adventitial FB",
     "Alveolar fibro":     "Alveolar FB",
     "Airway fibro":       "Adventitial FB",
@@ -625,7 +558,6 @@ HARMONIZE: dict[str, str] = {
     "Late airway SMC":    "VSMC",
     "Mid airway SMC 1":   "VSMC",
     "Mid airway SMC 2":   "VSMC",
-    # без BPD-аналога: Chondrocyte*, Mesothelial*, Schwann*, нейроны, NE, прогениторы дых. путей
 }
 
 
@@ -636,10 +568,6 @@ def harmonize_cell_type(raw_ct: str) -> str:
     return HARMONIZE.get(raw_ct, raw_ct)
 
 
-# ══════════════════════════════════════════════════════════════════
-# GRPO-ЭНДО WHITELIST (из config ot_include)
-# ══════════════════════════════════════════════════════════════════
-
 def load_grpo_endo_types() -> dict[str, set[str]]:
     """Return {species: set_of_canonical_cell_types} for GRPO endothelial whitelist."""
     with open(CONFIG_PATH) as f:
@@ -649,12 +577,6 @@ def load_grpo_endo_types() -> dict[str, set[str]]:
     human_types = {harmonize_cell_type(t) for t in atlas_raw}
     return {"rat": rat_types, "human": human_types}
 
-
-# ══════════════════════════════════════════════════════════════════
-# MAKE CELL SENTENCES
-# Единственная функция для всех источников (raw integer counts).
-# normalize_total(1e4) → log1p → tie-break noise → argsort desc → top-K
-# ══════════════════════════════════════════════════════════════════
 
 def make_cell_sentences(
     X: np.ndarray,
@@ -677,10 +599,6 @@ def make_cell_sentences(
     gene_arr = np.array(gene_names)
     return [" ".join(gene_arr[row[:top_k]]) for row in sorted_idx]
 
-
-# ══════════════════════════════════════════════════════════════════
-# BUILD PROMPT
-# ══════════════════════════════════════════════════════════════════
 
 def build_prompt(
     species: str,
@@ -705,10 +623,6 @@ def build_prompt(
     )
 
 
-# ══════════════════════════════════════════════════════════════════
-# GET RAW X
-# ══════════════════════════════════════════════════════════════════
-
 def get_raw_X(adata: anndata.AnnData) -> tuple[np.ndarray, list[str]]:
     if adata.raw is not None:
         X     = adata.raw.X
@@ -724,10 +638,6 @@ def get_raw_X(adata: anndata.AnnData) -> tuple[np.ndarray, list[str]]:
         X = X.toarray()
     return X.astype(np.float32), genes
 
-
-# ══════════════════════════════════════════════════════════════════
-# RESCUED COVERAGE
-# ══════════════════════════════════════════════════════════════════
 
 def rescued_coverage(
     gene_names_in_dataset: list[str],
@@ -746,10 +656,6 @@ def rescued_coverage(
     return present, missing
 
 
-# ══════════════════════════════════════════════════════════════════
-# GEMMA2 CHAT TEMPLATE — БЕЗ leading space перед completion
-# ══════════════════════════════════════════════════════════════════
-
 def gemma2_text(prompt: str, completion: str) -> str:
     return (
         f"<bos><start_of_turn>user\n"
@@ -758,10 +664,6 @@ def gemma2_text(prompt: str, completion: str) -> str:
         f"{completion}<end_of_turn>\n"
     )
 
-
-# ══════════════════════════════════════════════════════════════════
-# OBS_TO_EXAMPLES — h5ad obs → список примеров для GRPO JSONL
-# ══════════════════════════════════════════════════════════════════
 
 def obs_to_examples(obs: pd.DataFrame) -> list[dict]:
     examples = []
@@ -781,10 +683,6 @@ def obs_to_examples(obs: pd.DataFrame) -> list[dict]:
         })
     return examples
 
-
-# ══════════════════════════════════════════════════════════════════
-# SAVE JSONL
-# ══════════════════════════════════════════════════════════════════
 
 def save_grpo_jsonl(rows: pd.DataFrame, path: Path) -> None:
     """Save GRPO format: {"text": ...}"""
@@ -808,11 +706,6 @@ def save_sft_jsonl(rows: pd.DataFrame, path: Path) -> None:
             }, ensure_ascii=False) + "\n")
     print(f"  Saved: {path}  ({len(rows)} rows)")
 
-
-# ══════════════════════════════════════════════════════════════════
-# DETERMINISTIC STRATUM SEED — для Stage 0 barcode-level split
-# Использует MD5 вместо hash() (стабилен между процессами)
-# ══════════════════════════════════════════════════════════════════
 
 def stratum_seed(source: str, condition: str, cell_type: str) -> int:
     key = f"{source}|{condition}|{cell_type}"

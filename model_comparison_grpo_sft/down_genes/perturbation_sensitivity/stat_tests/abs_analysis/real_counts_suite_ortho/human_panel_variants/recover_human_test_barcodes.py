@@ -35,7 +35,7 @@ import pandas as pd
 
 PIPELINE_SHORT = Path("/Users/stepandolzhenko/Documents/AzithroGemma/pipeline_short")
 sys.path.insert(0, str(PIPELINE_SHORT))
-import stage1_sft_bidir as S1  # noqa: E402
+import stage1_sft_bidir as S1
 
 HERE = Path(__file__).parent
 TEST_INFERENCE_PATH = Path("/Users/stepandolzhenko/Downloads/test_inference_results3.jsonl")

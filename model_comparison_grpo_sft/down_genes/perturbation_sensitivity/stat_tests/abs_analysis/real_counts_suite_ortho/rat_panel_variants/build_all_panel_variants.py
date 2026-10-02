@@ -24,9 +24,8 @@ import panel_sets as PSets
 import updown_core as UC
 
 
-GATES = ("full_list",)   # PSets.GATES also offers the differential-expression
-                         # filtered variant; it is not part of this analysis
-SOLO_CT = ("gCap",)      # cell types that additionally get a figure of their own
+GATES = ("full_list",)
+SOLO_CT = ("gCap",)
 
 
 def main():
@@ -38,7 +37,6 @@ def main():
         print(f"\n{'=' * 78}\n=== arm={arm}  gate={gate}  all cell types\n{'=' * 78}")
         UC.ONLY_CT = None
         UC.run(arm, gate)
-        # same construction, same numbers, one cell type on its own figure
         for ct in SOLO_CT:
             print(f"\n{'=' * 78}\n=== arm={arm}  gate={gate}  {ct} alone\n{'=' * 78}")
             UC.ONLY_CT = ct
