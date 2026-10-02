@@ -13,7 +13,7 @@ Lock files in this folder: `conda_base_environment_2026-10-01.yml`, `pip_freeze_
 | numpy / pandas / scipy | 2.4.4 / 2.2.3 / 1.17.1 |
 | anndata / scanpy / h5py | 0.12.10 / 1.12 / 3.15.1 |
 | scikit-learn / statsmodels | 1.8.0 / 0.14.6 |
-| matplotlib / matplotlib-venn / pillow | 3.10.8 / 1.1.2 / 12.2.0 |
+| matplotlib / pillow | 3.10.8 / 12.2.0 |
 | gseapy / rpy2 | 1.3.0 / 3.6.7 |
 
 The versions are those installed on 2026-10-01, when the scripts of `pipeline_short/` and of the analysis folder ran unchanged in this environment.

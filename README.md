@@ -30,7 +30,6 @@ The header comment of the yaml predates the final dataset (13,886 / 60 / 892 exa
 | Rescued-gene deltas, human | `ortho/human_panel_variants/`: `recover_human_test_barcodes.py`, `human_rescue_pipeline_genomewide.py`, `filter_to_rat_schema.py`, `panel_sets_human.py`, `build_disease_arms_trajectory.py` (with `human_updown_percell.py`) |
 | Rescued-gene deltas, rat | `ortho/rat/recover_rat_test_barcodes.py`, `ortho/rat_panel_variants/build_all_panel_variants.py` (with `updown_core.py`, `panel_sets.py`) |
 | cameraPR screen of the azithromycin prediction | `ortho/human_panel_variants/export_for_limma.py`, `limma_sets.py`, then `ortho/build_panelC_dotplot.py` |
-| Overlap of rescued genes, rat and human | `ortho/build_ortholog_pairs.py`, `ortho/venn_rat_human_model.py` (with `ortho/ortho.py`) |
 | Main figure | `ortho/build_main_figure.py` |
 | Figure typography | `ANALYSIS/plot_style.py` |
 
@@ -42,14 +41,13 @@ The scripts contain absolute paths of the machine where they ran: the project ro
 
 (on Linux, `sed -i` without the empty string), and the same for `/Users/stepandolzhenko/Downloads`.
 
-Included: the split registry and its audit tables, `scripts/cell_types_config.json`, the gene lists read at import by `pipeline_short/common.py` (`train-after-grpo-analysis/rescued_*`), the ortholog table with its provenance record, the training configuration and logs, and the environment lock files.
+Included: the split registry and its audit tables, `scripts/cell_types_config.json`, the gene lists read at import by `pipeline_short/common.py` (`train-after-grpo-analysis/rescued_*`), the training configuration and logs, and the environment lock files.
 
 Not included:
 - single-cell data: `rat.ho.azi.integrated.h5ad` (AA000), `he_lung_atlas.h5ad` and `2022FetalLungIntCounts.h5ad` (E-MTAB-11278), `BPD-PH/GSE275938_cell_metadata.csv` and `GSE275938_compiled_counts.csv` (GSE275938);
 - the SFT dataset (`pipeline_short/sft_dataset_bidir/`), rebuilt by `stage1_sft_bidir.py`;
 - model predictions (`test_inference_results3.jsonl`, `test_inference_results_t08.jsonl`, `inference_azi_results.jsonl`), produced by the generation step;
 - the rat rescued-gene tables read through `DGE_XLSX` in `ANALYSIS/common.py`;
-- the source tables of `build_ortholog_pairs.py` (HCOP, RGD, HGNC; md5 sums in `ortholog_pairs.provenance.json`);
 - Enrichr libraries, downloaded by `gseapy.get_library` at run time.
 
 ## Model weights
