@@ -14,7 +14,7 @@ these patients), so rows are prompt-only — no "completion" field.
 
 Strictly split=="test" or split=="valid" barcodes from cell_split_registry_short.csv
 (never train — checked below). Scope matches TARGET_HUMAN_CELL_TYPES (gCap,
-aCap, Pulmonary venous EC, Pericyte), the scope shared with SFT/GRPO.
+aCap, Pulmonary venous EC, Pericyte), the scope shared with SFT.
 
 Writes a single combined file:
   pipeline_short/inference_azi_concise.jsonl

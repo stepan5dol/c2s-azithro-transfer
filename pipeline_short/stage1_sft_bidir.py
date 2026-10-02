@@ -18,8 +18,8 @@ Reads cell_split_registry_short.csv, loads raw counts per source, builds
   sft_dataset_bidir/{train,valid,test}.jsonl  — {"prompt":..., "completion":...}
 
 Cell sentences: raw counts → normalize_total(1e4) → log1p → rank desc → top-K=800.
-Completion has no leading space (Gemma2 chat template fix).
-Gene names remapped via ALIAS_TO_CANONICAL for human (GRPO fix applied here too).
+Completion has no leading space.
+Gene names remapped via ALIAS_TO_CANONICAL for human.
 """
 from __future__ import annotations
 

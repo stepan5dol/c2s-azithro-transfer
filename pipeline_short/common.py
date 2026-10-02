@@ -20,8 +20,6 @@ ATLAS_CLEAN_PATH  = BASE / "he_lung_atlas.h5ad"
 ATLAS_RAW_PATH    = BASE / "2022FetalLungIntCounts.h5ad"
 BPD_META_PATH     = BASE / "BPD-PH/GSE275938_cell_metadata.csv"
 BPD_COUNTS_PATH   = BASE / "BPD-PH/GSE275938_compiled_counts.csv"
-MOUSE_META_PATH   = BASE / "GSE151974_RAW/GSE151974_cell_metadata_postfilter.csv"
-MOUSE_COUNTS_PATH = BASE / "GSE151974_RAW/GSE151974_raw_umi_matrix_postfilter.csv.gz"
 
 RESCUED_RAT_PATH   = BASE / "train-after-grpo-analysis/rescued_rat_genes.txt"
 RESCUED_HUMAN_PATH = BASE / "train-after-grpo-analysis/rescued_human_genes.txt"
@@ -31,8 +29,6 @@ PIPELINE_DIR = BASE / "pipeline_short"
 
 TOP_K       = 800
 RANDOM_SEED = 42
-N_PER_CT    = 50
-N_AUGMENT   = 2
 
 TARGET_RAT_CELL_TYPES: set[str] = {"gCAP", "aCAP", "Peri", "VEC"}
 TARGET_HUMAN_CELL_TYPES: set[str] = {
@@ -621,90 +617,6 @@ def build_prompt(
         f"Unexposed: {unexposed_cs}\n\n"
         "Perturbed cell:"
     )
-
-
-def get_raw_X(adata: anndata.AnnData) -> tuple[np.ndarray, list[str]]:
-    if adata.raw is not None:
-        X     = adata.raw.X
-        genes = adata.raw.var_names.tolist()
-    elif "counts" in adata.layers:
-        X     = adata.layers["counts"]
-        genes = adata.var_names.tolist()
-    else:
-        print("  WARN: raw/counts not found, using X")
-        X     = adata.X
-        genes = adata.var_names.tolist()
-    if sp.issparse(X):
-        X = X.toarray()
-    return X.astype(np.float32), genes
-
-
-def rescued_coverage(
-    gene_names_in_dataset: list[str],
-    rescued_set: set[str],
-    label: str,
-) -> tuple[set[str], set[str]]:
-    dataset_genes = set(gene_names_in_dataset)
-    present = rescued_set & dataset_genes
-    missing = rescued_set - dataset_genes
-    pct = 100 * len(present) / len(rescued_set) if rescued_set else 0.0
-    print(f"  [{label}] Rescued in dataset: {len(present)}/{len(rescued_set)} ({pct:.1f}%)")
-    if missing:
-        print(f"    Missing ({len(missing)}): {sorted(missing)}")
-    else:
-        print("    ✓ All rescued genes present")
-    return present, missing
-
-
-def gemma2_text(prompt: str, completion: str) -> str:
-    return (
-        f"<bos><start_of_turn>user\n"
-        f"{prompt}<end_of_turn>\n"
-        f"<start_of_turn>model\n"
-        f"{completion}<end_of_turn>\n"
-    )
-
-
-def obs_to_examples(obs: pd.DataFrame) -> list[dict]:
-    examples = []
-    for _, row in obs.iterrows():
-        prompt = build_prompt(
-            species          = row["src_species"],
-            age_str          = row["src_age_str"],
-            pma_weeks        = row["src_pma_weeks"],
-            cell_type_fine   = row["src_type_fine"],
-            cell_type_broad_str = row["src_type_broad"],
-            perturbation_str = row["perturbation_str"],
-            unexposed_cs     = row["src_cell_sentence"],
-        )
-        examples.append({
-            "text":      gemma2_text(prompt, row["tgt_cell_sentence"]),
-            "pair_type": row["transition"],
-        })
-    return examples
-
-
-def save_grpo_jsonl(rows: pd.DataFrame, path: Path) -> None:
-    """Save GRPO format: {"text": ...}"""
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w") as f:
-        for _, row in rows.iterrows():
-            f.write(json.dumps({"text": row["text"]}, ensure_ascii=False) + "\n")
-    print(f"  Saved: {path}  ({len(rows)} rows)")
-
-
-def save_sft_jsonl(rows: pd.DataFrame, path: Path) -> None:
-    """Save SFT format: {"prompt": ..., "completion": ...} без leading space."""
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w") as f:
-        for _, row in rows.iterrows():
-            f.write(json.dumps({
-                "prompt":     row["prompt"],
-                "completion": row["completion"],
-            }, ensure_ascii=False) + "\n")
-    print(f"  Saved: {path}  ({len(rows)} rows)")
 
 
 def stratum_seed(source: str, condition: str, cell_type: str) -> int:

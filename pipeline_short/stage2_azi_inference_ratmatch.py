@@ -3,7 +3,7 @@
 pipeline_short/stage2_azi_inference_ratmatch.py — AZI counterfactual inference builder (rat-matched prompt variant).
 
 Same as stage2_azi_inference.py, but AZI_PERTURBATION is the literal, verbatim
-rat perturbation string the model saw during rat SFT/GRPO training
+rat perturbation string the model saw during rat SFT training
 (PERTURBATION_STR[("rat", "HO", "AZI")] in common.py):
   "Azithromycin treatment (30 mg/kg IP at P7, P10, P13) during after exposure
   to 85% O2 for 14 days."
@@ -19,7 +19,7 @@ these patients), so rows are prompt-only — no "completion" field.
 
 Strictly split=="test" or split=="valid" barcodes from cell_split_registry_short.csv
 (never train — checked below). Scope matches TARGET_HUMAN_CELL_TYPES (gCap,
-aCap, Pulmonary venous EC, Pericyte), the scope shared with SFT/GRPO.
+aCap, Pulmonary venous EC, Pericyte), the scope shared with SFT.
 
 Writes a single combined file:
   pipeline_short/inference_azi_ratmatch.jsonl
