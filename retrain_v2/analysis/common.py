@@ -19,14 +19,14 @@ import numpy as np
 
 import rank_expr_model as rem
 
-BASE = Path("/Users/stepandolzhenko/Documents/AzithroGemma")
-H5AD = "/Users/stepandolzhenko/Documents/AzithroGemma/rat.ho.azi.integrated.h5ad"
+BASE = Path(__file__).resolve().parents[2]  # repository root
+H5AD = str(BASE / "rat.ho.azi.integrated.h5ad")
 RUNS = {
-    "t1.0": Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/results/test_inference_results_t10.jsonl"),
-    "t0.8": Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/results/test_inference_results_t08.jsonl"),
-    "t1.2": Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/results/test_inference_results_t12.jsonl"),
+    "t1.0": BASE / "retrain_v2/results/test_inference_results_t10.jsonl",
+    "t0.8": BASE / "retrain_v2/results/test_inference_results_t08.jsonl",
+    "t1.2": BASE / "retrain_v2/results/test_inference_results_t12.jsonl",
 }
-RESCUED_DOWN_JSON = "/Users/stepandolzhenko/Documents/AzithroGemma/train-after-grpo-analysis/rescued_genes_down.json"
+RESCUED_DOWN_JSON = str(BASE / "train-after-grpo-analysis/rescued_genes_down.json")
 
 HERE = Path(__file__).parent
 REP_DIR = HERE / "reports"

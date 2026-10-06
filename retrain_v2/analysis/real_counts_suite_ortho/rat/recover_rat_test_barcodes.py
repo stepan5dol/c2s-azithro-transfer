@@ -38,14 +38,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-PIPELINE_SHORT = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/pipeline_short")
+PIPELINE_SHORT = Path(__file__).resolve().parents[3] / "pipeline_short"
 sys.path.insert(0, str(PIPELINE_SHORT))
 import stage1_sft_bidir as S1
 
 OUT_DIR = Path(__file__).parent
 OUT_DIR.mkdir(exist_ok=True)
 
-TEST_INFERENCE_PATH = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/results/test_inference_results_t10.jsonl")
+TEST_INFERENCE_PATH = Path(__file__).resolve().parents[3] / "results/test_inference_results_t10.jsonl"
 
 
 def _build_pairs_with_barcodes(

@@ -29,7 +29,7 @@ import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
 
-DST = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/figures_for_manuscript")
+DST = Path(__file__).resolve().parents[2] / "figures_for_manuscript"
 
 JOBS = [
     (DST / "S1a_equivalence_rat.png", [

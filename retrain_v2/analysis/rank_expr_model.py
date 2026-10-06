@@ -164,6 +164,6 @@ def reconstruct_batch(gene_lists: list[list[str]], model: RankExprModel, k: int 
 
 
 if __name__ == "__main__":
-    H5AD = "/Users/stepandolzhenko/Documents/AzithroGemma/rat.ho.azi.integrated.h5ad"
+    H5AD = str(Path(__file__).resolve().parents[2] / "rat.ho.azi.integrated.h5ad")
     m = fit(H5AD)
     print(f"slope={m.slope:.5f} intercept={m.intercept:.4f} r2={m.r2:.4f} n_genes={m.n_genes}")

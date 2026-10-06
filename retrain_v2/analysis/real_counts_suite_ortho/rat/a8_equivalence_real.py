@@ -29,7 +29,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-ABS_DIR = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/analysis")
+ABS_DIR = Path(__file__).resolve().parents[2]  # retrain_v2/analysis
 sys.path.insert(0, str(ABS_DIR))
 import common as C  # noqa: E402
 import plot_style as PS  # noqa: E402
@@ -40,7 +40,7 @@ import common_real as CR  # noqa: E402
 
 HERE = Path(__file__).parent
 CSV_PATH = HERE / "recovered_rat_test_pairs.csv"
-TEST_INFERENCE_PATH = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/results/test_inference_results_t10.jsonl")
+TEST_INFERENCE_PATH = Path(__file__).resolve().parents[3] / "results/test_inference_results_t10.jsonl"
 
 CT_RAW_TO_CT = {"general capillary endothelial cell (endothelial)": "gCap",
                 "aerocyte capillary endothelial cell (endothelial)": "aCap",

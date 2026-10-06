@@ -59,7 +59,7 @@ import gseapy as gp
 import numpy as np
 import pandas as pd
 
-ABS_DIR = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/analysis")
+ABS_DIR = Path(__file__).resolve().parents[2]  # retrain_v2/analysis
 PMA_DIR = ABS_DIR / "pathway_module_analysis"
 sys.path.insert(0, str(ABS_DIR))
 import common_human as CH
@@ -83,7 +83,7 @@ COND_MODEL = "BPD"
 COND_MODEL_OF = {"BPD7mo": "BPD", "BPDPH7mo": "BPD-PH", "Acute26": "Acute"}
 OUT_OF = {"BPD7mo": OUT}
 CONTROL_OF = {"BPD7mo": "term", "BPDPH7mo": "term", "Acute26": "he22"}
-AZI_JSONL = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/results/inference_azi_results.jsonl")
+AZI_JSONL = Path(__file__).resolve().parents[3] / "results/inference_azi_results.jsonl"
 MIN_AZI_CELLS = 3
 LIBRARIES = ["GO_Biological_Process_2023", "KEGG_2021_Human", "Reactome_2022",
              "WikiPathways_2024_Human", "MSigDB_Hallmark_2020"]

@@ -45,12 +45,12 @@ import rank_expr_model as rem
 import load_data as L
 import real_counts as RC
 
-PIPELINE_SHORT = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/pipeline_short")
+PIPELINE_SHORT = Path(__file__).resolve().parents[3] / "pipeline_short"
 sys.path.insert(0, str(PIPELINE_SHORT))
 import stage1_sft_bidir as S1
 
 PAIRS_CSV = HERE / "recovered_human_test_pairs.csv"
-TEST_INFERENCE = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/results/test_inference_results_t10.jsonl")
+TEST_INFERENCE = Path(__file__).resolve().parents[3] / "results/test_inference_results_t10.jsonl"
 SEED = 0
 
 GATES = ("full_list",)

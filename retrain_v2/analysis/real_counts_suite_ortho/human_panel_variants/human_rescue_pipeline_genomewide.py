@@ -65,7 +65,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-ABS_DIR = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/analysis")
+ABS_DIR = Path(__file__).resolve().parents[2]  # retrain_v2/analysis
 PMA_DIR = ABS_DIR / "pathway_module_analysis"
 sys.path.insert(0, str(ABS_DIR))
 import common_human as CH
@@ -81,7 +81,7 @@ if _saved_common is not None:
     sys.modules["common"] = _saved_common
 
 HERE = Path(__file__).parent
-AZI_JSONL = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/results/inference_azi_results.jsonl")
+AZI_JSONL = Path(__file__).resolve().parents[3] / "results/inference_azi_results.jsonl"
 
 MIN_PCT = 0.1
 LOGFC_THRESHOLD = 0.25
