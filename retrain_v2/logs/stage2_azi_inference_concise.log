@@ -1,0 +1,32 @@
+OMP: Info #276: omp_set_nested routine deprecated, please use omp_set_max_active_levels instead.
+================================================================
+STAGE 2 — AZI Counterfactual Inference Builder [concise prompt] (test+valid, BPD source)
+================================================================
+
+Loading registry...
+  631 held-out (test+valid) BPD barcodes to build sentences for
+
+--- Building cell sentences ---
+  [bpd] reading compiled_counts.csv in chunks (large file, please wait)...
+  [bpd] built 631 sentences
+
+--- Building AZI inference prompts ---
+  [Acute26] 277 prompts, types: ['Pericyte', 'Pulmonary venous EC', 'aCap', 'gCap']
+  [BPD7mo] 54 prompts, types: ['Pericyte', 'Pulmonary venous EC', 'aCap', 'gCap']
+  [BPDPH7mo] 300 prompts, types: ['Pericyte', 'Pulmonary venous EC', 'aCap', 'gCap']
+
+--- Sanity checks ---
+  ✓ 0 inference barcodes in train (631 total)
+  ✓ all rows are prompt-only (no completion/ground truth)
+
+--- Sample prompt ---
+[Acute26] cell_type=Pericyte split=test
+Determine the single cell's expression changes, listed in 'Unexposed:', under the outlined conditions after exposure to the specified perturbation, and generate the cell sentence of the 'Perturbed cell'.
+
+Species: Homo sapiens
+Age: born at gestational week 26, postnatal week 2 (a
+
+--- Saving ---
+  Saved: /Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/pipeline_short/inference_azi_concise.jsonl  (631 rows)
+
+✓ Stage 2 complete. inference prompts = 631

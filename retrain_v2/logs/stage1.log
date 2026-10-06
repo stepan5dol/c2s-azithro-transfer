@@ -1,0 +1,110 @@
+OMP: Info #276: omp_set_nested routine deprecated, please use omp_set_max_active_levels instead.
+================================================================
+STAGE 1 — SFT Dataset Builder
+================================================================
+Loading registry...
+
+[S1-1] FINE_TO_BROAD coverage for paired types:
+  OK (8) types have known broad
+
+[S1-2] ABBREV_TO_FULL — paired types with no full name resolved:
+
+[S1-0] Building pairing coverage report...
+  20 paired (src∩tgt), 0 unpaired → /Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/pipeline_short/unpaired_report_bidir.csv
+
+--- Loading counts and building cell sentences ---
+  [rat] loading h5ad raw counts...
+  [atlas] loading counts from ATLAS_CLEAN_PATH...
+  No raw in clean atlas; loading ATLAS_RAW_PATH and matching barcodes...
+  Barcode match: 71752/71752
+  [bpd] reading compiled_counts.csv in chunks (large file, please wait)...
+  [bpd] built 4,891 sentences
+
+  Sentences: rat=4,642  atlas=1,142  bpd=4,891
+
+[S1-5] Rescued gene coverage (sample from sentence pool):
+  rat  : 159/159 rescued genes found in sampled sentences
+  human: 160/161 rescued genes found in sampled sentences
+
+--- Building pairs per split ---
+
+  [TRAIN]
+  [dedup] dropped 5,170 exact-duplicate reverse (prompt,completion) pairs
+  Total [train]: 14,520 pairs
+  [S1-3] ✓ [train] 0 old aliases in 9,845 cell-sentence completions
+  [S1-4] ✓ [train] All 9,845 cell-sentence completions = 800 tokens
+
+  [VALID]
+  Total [valid]: 102 pairs
+  [S1-3] ✓ [valid] 0 old aliases in 51 cell-sentence completions
+  [S1-4] ✓ [valid] All 51 cell-sentence completions = 800 tokens
+
+  [TEST]
+  Total [test]: 1,566 pairs
+  [S1-3] ✓ [test] 0 old aliases in 783 cell-sentence completions
+  [S1-4] ✓ [test] All 783 cell-sentence completions = 800 tokens
+
+[S1-8] ✓ train ∩ test barcodes = 0
+
+[S1-7] PAIR COUNTS BY TRANSITION × CELL TYPE  (train split):
+
+  human_Acute26_BPD7mo  [552 pairs, 3.8% of train]
+    general capillary endothelial cell (endothelial)           336
+    pulmonary venous endothelial cell (endothelial)             96
+    pericyte (mural)                                            60
+    aerocyte capillary endothelial cell (endothelial)           60
+
+  human_Acute26_BPD7mo_rev  [184 pairs, 1.3% of train]
+    ?                                                          184
+
+  human_Acute26_BPDPH7mo  [2,321 pairs, 16.0% of train]
+    general capillary endothelial cell (endothelial)          1057
+    pericyte (mural)                                           534
+    pulmonary venous endothelial cell (endothelial)            474
+    aerocyte capillary endothelial cell (endothelial)          256
+
+  human_Acute26_BPDPH7mo_rev  [1,649 pairs, 11.4% of train]
+    ?                                                         1649
+
+  human_He22_Acute26  [1,206 pairs, 8.3% of train]
+    general capillary endothelial cell (endothelial)           430
+    aerocyte capillary endothelial cell (endothelial)          291
+    pulmonary venous endothelial cell (endothelial)            258
+    pericyte (mural)                                           227
+
+  human_He22_Acute26_rev  [995 pairs, 6.9% of train]
+    ?                                                          995
+
+  rat_HO_AZI  [2,962 pairs, 20.4% of train]
+    general capillary endothelial cell (endothelial)          1024
+    pericyte (mural)                                           948
+    pulmonary venous endothelial cell (endothelial)            564
+    aerocyte capillary endothelial cell (endothelial)          426
+
+  rat_HO_AZI_rev  [835 pairs, 5.8% of train]
+    ?                                                          835
+
+  rat_RA_HO  [2,804 pairs, 19.3% of train]
+    general capillary endothelial cell (endothelial)          1234
+    pulmonary venous endothelial cell (endothelial)            696
+    aerocyte capillary endothelial cell (endothelial)          474
+    pericyte (mural)                                           400
+
+  rat_RA_HO_rev  [1,012 pairs, 7.0% of train]
+    ?                                                         1012
+
+[S1-6] Sample [train] pair_type=rat_RA_HO
+  prompt[:300]: Determine the single cell's expression changes, listed in 'Unexposed:', under the outlined conditions after exposure to the specified perturbation, and generate the cell sentence of the 'Perturbed cell'.
+
+Species: Rattus norvegicus
+Age: postnatal day 14
+Cell type: pericyte (mural)
+Perturbation: Hype
+  completion[:100]: Mt-co2 Actb Tagln Tmsb4x Mt-atp6 Myl6 Mt-co3 Mt-cyb Ppp1r14a Mt-co1 H3f3a Ifitm3 Actg1 Fth1 Rps8 Mt-...
+
+--- Saving JSONL ---
+  Saved: /Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/pipeline_short/sft_dataset_bidir/train.jsonl  (14,520 examples)
+  Saved: /Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/pipeline_short/sft_dataset_bidir/valid.jsonl  (102 examples)
+  Saved: /Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/pipeline_short/sft_dataset_bidir/test.jsonl  (1,566 examples)
+
+✓ Stage 1 complete. Total examples: 16,188

@@ -1,0 +1,3 @@
+train: 14,520 rows -> /Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/pipeline_short/sft_dataset_bidir/train_segments.jsonl
+valid: 102 rows -> /Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/pipeline_short/sft_dataset_bidir/valid_segments.jsonl
+test: 1,566 rows -> /Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/pipeline_short/sft_dataset_bidir/test_segments.jsonl

@@ -1,0 +1,100 @@
+================================================================
+STAGE 0 — Data Audit + CellSplitRegistry
+================================================================
+
+Loading rat h5ad obs...
+  rat:     4642 cells, 4 types, 3 conditions
+Loading atlas h5ad obs...
+  atlas:   1142 cells, 4 types, 1 conditions
+Loading BPD metadata CSV...
+  bpd:     4891 cells, 4 types, 3 conditions
+
+Total: 10,675 cells  (grpo_endo=10,675)
+
+════════════════════════════════════════════════════════════════
+[S0-1] DATA AUDIT — counts per source × condition × cell_type
+════════════════════════════════════════════════════════════════
+source condition           cell_type  n_cells
+ atlas      He22                gCap      512
+ atlas      He22            Pericyte      410
+ atlas      He22                aCap      116
+ atlas      He22 Pulmonary venous EC      104
+   bpd   Acute26                gCap     1212
+   bpd   Acute26                aCap      304
+   bpd   Acute26            Pericyte      269
+   bpd   Acute26 Pulmonary venous EC      198
+   bpd    BPD7mo                gCap      138
+   bpd    BPD7mo Pulmonary venous EC       44
+   bpd    BPD7mo                aCap       29
+   bpd    BPD7mo            Pericyte       27
+   bpd  BPDPH7mo                gCap     1744
+   bpd  BPDPH7mo                aCap      526
+   bpd  BPDPH7mo            Pericyte      212
+   bpd  BPDPH7mo Pulmonary venous EC      188
+   rat       AZI                gCAP      608
+   rat       AZI                Peri      188
+   rat       AZI                 VEC      113
+   rat       AZI                aCAP       86
+   rat        HO                gCAP      732
+   rat        HO                Peri      238
+   rat        HO                 VEC      139
+   rat        HO                aCAP       95
+   rat        RA                gCAP     1564
+   rat        RA                aCAP      417
+   rat        RA                Peri      294
+   rat        RA                 VEC      168
+
+  Saved → /Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/pipeline_short/data_audit.csv
+
+  BPD per-condition (expected vs actual):
+    Acute26     : expected= 3745, actual= 1983  WARN
+    BPD7mo      : expected=14701, actual=  238  WARN
+    BPDPH7mo    : expected= 8594, actual= 2670  WARN
+    Term0d      : expected= 8339, actual=    0  WARN
+    Term20d     : expected= 8228, actual=    0  WARN
+
+════════════════════════════════════════════════════════════════
+[S0-2] CONFIG COVERAGE — config types found in obs?
+════════════════════════════════════════════════════════════════
+  WARN [RAT.include] 4/22 found  missing=['AEC', 'AF1', 'AF2', 'AM', 'AT1', 'AT2', 'B cell', 'Ciliated', 'Club', 'DC', 'IM', 'LEC', 'Meso', 'Mono', 'Myofib', 'Neu', 'SMC', 'T cell']
+  OK   [RAT.ot_include] 4/4 found
+  WARN [ATLAS_He.include] 5/144 found  missing=['ACTC+ SMC', 'APOE+ MΦ1', 'APOE+ MΦ2', 'ASPN+ chondrocyte', 'AT1', 'AT2', 'Activated NK', 'Adventitial fibro', 'Airway fibro', 'Alveolar fibro', 'Arterial endo', 'Basophil', 'CD16+ NK', 'CD4 T', 'CD5+ CCL22+ mature B', 'CD5+ CCL22- mature B', 'CD5- Mature B', 'CD56bright NK', 'CD8 T', 'CMP', 'COL20A1+ Schwann', 'CX3CR1+ MΦ', 'CXCL9+ MΦ', 'Ciliated', 'Club', 'Cycling DC', 'Cycling NK', 'Cycling T', 'Cycling definitive erythroblast', 'DC1', 'DC2', 'DC3', 'Definitive erythroblast', 'Definitive erythrocyte', 'Definitive reticulocyte', 'Deuterosomal', 'Early Schwann', 'Early airway progenitor', 'Early cap', 'Early fibro', 'Early mesothelial', 'Early stalk', 'Early tip', 'Eosinophil', 'FGFBP2+ Neural progenitor', 'GHRL+ NE precursor', 'GHRL+ neuroendocrine', 'GMP', 'GRIA2+ arterial endo', 'HMOX1+ primitive erythroblast', 'HSC', 'HSC/ELP', 'ILC2', 'ILC3', 'ILCP', 'Immature B', 'Interm chondrocyte', 'Interm fibro', 'Interm neuroendocrine', 'Intermediate NK', 'Intermediate lymphatic endo', 'KCNIP4+ neuron', 'Large pre-B', 'Late Schwann', 'Late airway SMC', 'Late airway progenitor', 'Late basal', 'Late mesothelial', 'Late pre-B', 'Late pro-B', 'Late stalk', 'Late tip', 'Lymphatic endo', 'MEP', 'MFNG+ DBH+ neuron', 'MUC16+ ciliated', 'MUC5AC+ ASCL1+ progenitor', 'MYL4+ SMC', 'Mast', 'Megakaryocyte', 'Mesenchymal 1', 'Mesenchymal 2', 'Mesenchymal 3', 'Mid Schwann', 'Mid airway SMC 1', 'Mid airway SMC 2', 'Mid airway progenitor', 'Mid basal', 'Mid fibro', 'Mid mesothelial', 'Mid stalk', 'Mid tip', 'Myelocyte-like', 'Myofibro 1', 'Myofibro 2', 'Myofibro 3', 'NKT1', 'NKT2', 'Neutrophil', 'Non-cla. mono.', 'OMD+ endo', 'PCP4+ neuron', 'Platelet', 'Primitive erythrocyte', 'Pro-B', 'Pro-B/Pre-B transition', 'Proliferating Schwann', 'Promonocyte-like', 'Promyelocyte-like', 'Proximal basal', 'Proximal secretory 1', 'Proximal secretory 2', 'Proximal secretory 3', 'Proximal secretory progenitors', 'Pulmonary NE precursor', 'Pulmonary neuroendocrine', 'Resting chondrocyte', 'S100A12-hi cla. mono.', 'S100A12-lo cla. mono.', 'SCG3+ lymphatic endothelial', 'SMG', 'SMG basal', 'SPP1+ MΦ', 'SST+ neuron', 'Schwann precursor', 'Squamous', 'TM4SF4+ CHODL+ neuron', 'TM4SF4+ PENK+ neuron', 'Th17', 'Treg', 'Tαβ_Entry', 'Vascular SMC 1', 'Vascular SMC 2', 'aDC 1', 'aDC 2', 'pDC', 'pre-pDC/DC5', 'κ small pre-B', 'λ small pre-B']
+  WARN [ATLAS_He.ot_include] 5/9 found  missing=['Early cap', 'Arterial endo', 'GRIA2+ arterial endo', 'OMD+ endo']
+
+════════════════════════════════════════════════════════════════
+[S0-3] HARMONIZE COVERAGE (bidirectional)
+════════════════════════════════════════════════════════════════
+
+  (a) Atlas types NOT mapping to a BPD canon (0 raw types):
+
+  (b) BPD canonical types with NO atlas source (0):
+
+════════════════════════════════════════════════════════════════
+[S0-4] BARCODE UNIQUENESS between sources
+════════════════════════════════════════════════════════════════
+  ✓ rat ∩ atlas = 0
+  ✓ rat ∩ bpd = 0
+  ✓ atlas ∩ bpd = 0
+
+════════════════════════════════════════════════════════════════
+BUILDING SPLIT (barcode-level, deterministic seed per stratum)
+════════════════════════════════════════════════════════════════
+  train=9,216  valid=73  test=1,386
+
+════════════════════════════════════════════════════════════════
+[S0-5] scFID SETUP — held-out source cells + valid transitions
+════════════════════════════════════════════════════════════════
+
+  SCFID_RESERVATIONS is empty — no scFID carve-out active, all strata use the general train/valid/test rule.
+
+════════════════════════════════════════════════════════════════
+[S0-6] SPLIT ISOLATION
+════════════════════════════════════════════════════════════════
+  ✓ train ∩ valid = 0
+  ✓ valid ∩ test = 0
+  ✓ train ∩ test = 0
+
+  Saved: /Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/cell_split_registry_short.csv  (10,675 rows)
+  Saved: /Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/pipeline_short/split_summary.csv
+
+✓ Stage 0 complete.
