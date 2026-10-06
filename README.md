@@ -47,7 +47,7 @@ The archives use other file names: rename `Assembled10DomainsFiltered.h5ad` to `
 
 The rat rescued-gene tables read through `DGE_XLSX` in `ANALYSIS/common.py` go to the same place: `gcap rescue gene.xlsx`, `acap resuce gene.xlsx`, `pericyte_rescue gene.xlsx`, `Venous_rescue gene.xlsx`.
 
-Model predictions are read from `train/results/`: `test_inference_results_t10.jsonl`, `test_inference_results_t08.jsonl`, `test_inference_results_t12.jsonl`, `inference_azi_results.jsonl`, the outputs of the generation step (`pod/README.md`).
+Model predictions are read from `train/results/`: `test_inference_results_t10.jsonl`, `test_inference_results_t08.jsonl`, `test_inference_results_t12.jsonl`, `inference_azi_results.jsonl`, the outputs of the generation step (`pod/README.md`); the same files are in the model repository under `inference_ckpt264_2026-10-05/results/`.
 
 Fine-tuning and generation ran on a GPU pod and keep its `/workspace` layout: the axolotl yaml lists the dataset and output paths under `/workspace/axolotl/mainwork/`, `pod/run_test.py` takes `MODEL_DIR`, `TEST_PATH` and `OUT_PATH` from the environment, and `pod/run_azi.py` takes the input and output paths as arguments. The logs keep the absolute paths of the machines where they were written.
 
@@ -61,7 +61,7 @@ Not included:
 
 ## Model weights
 
-Hugging Face [`dolzhenkosv/c2s-pythia-1b-azithro-transfer`](https://huggingface.co/dolzhenkosv/c2s-pythia-1b-azithro-transfer), revision `27af97d2eae8e6be6de5272a269f67e378474a1c` (checkpoint-264, logs, predictions).
+Hugging Face [`dolzhenkosv/c2s-pythia-1b-azithro-transfer`](https://huggingface.co/dolzhenkosv/c2s-pythia-1b-azithro-transfer), revision `dd00e8c032b7fc62fdf36cfc5fe7ce6fab84e36c`: the model used in the study (`sft_pythia1b_short_full/checkpoint-264`), the training data, configuration and logs, and the predictions.
 
 ## Environment
 
@@ -70,3 +70,11 @@ See `environment/ENVIRONMENT.md` and the lock files in `environment/`.
 ## License
 
 Code: MIT (`LICENSE`). Model weights: CC BY 4.0, the license of the base model vandijklab/C2S-Scale-Pythia-1b-pt; attribution to C2S-Scale and to EleutherAI Pythia (Apache-2.0) applies.
+
+## References
+
+- Rizvi SA, Levine D, Patel A, …, van Dijk D. Scaling Large Language Models for Next-Generation Single-Cell Analysis. bioRxiv, 2025. [doi:10.1101/2025.04.14.648850](https://doi.org/10.1101/2025.04.14.648850)
+- Levine D, Rizvi SA, Lévy S, …, van Dijk D. Cell2Sentence: Teaching Large Language Models the Language of Biology. Proceedings of the 41st International Conference on Machine Learning, PMLR 235:27299–27325, 2024.
+- Biderman S, Schoelkopf H, Anthony Q, et al. Pythia: A Suite for Analyzing Large Language Models Across Training and Scaling. Proceedings of the 40th International Conference on Machine Learning, PMLR 202:2397–2430, 2023.
+- He P, Lim K, Sun D, et al. A human fetal lung cell atlas uncovers proximal-distal gradients of differentiation and key regulators of epithelial fates. Cell 185(25):4841–4860, 2022. [doi:10.1016/j.cell.2022.11.005](https://doi.org/10.1016/j.cell.2022.11.005)
+- Shirazi SP, Negretti NM, Jetter CS, et al. Bronchopulmonary dysplasia with pulmonary hypertension associates with semaphorin signaling loss and functionally decreased FOXF1 expression. Nature Communications 16, 2025. [doi:10.1038/s41467-025-60371-7](https://doi.org/10.1038/s41467-025-60371-7)
