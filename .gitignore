@@ -1,3 +1,12 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# input data and model outputs live in public archives, not in git (README, Paths and inputs)
+*.h5ad
+*.h5ad.gz
+BPD-PH/
+*rescue gene.xlsx
+*resuce gene.xlsx
+retrain_v2/results/
+retrain_v2/pipeline_short/sft_dataset_bidir/

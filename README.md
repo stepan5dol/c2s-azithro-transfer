@@ -35,7 +35,7 @@ The header comment of the yaml predates the final dataset (13,886 / 60 / 892 exa
 
 ## Paths and inputs
 
-The scripts build every path from their own location in the repository, so they run from a fresh clone and from any working directory without editing. The single-cell data, used both for training and for the analysis, go to the repository root under these names:
+The scripts build every path from their own location in the repository, so they run from a fresh clone and from any working directory without editing. The single-cell data, used both for training and for the analysis, are not part of this repository: download them from the archives below into the root of your local clone, under the names in the first column.
 
 | Path in the repository | Dataset | Source |
 |---|---|---|
@@ -43,9 +43,9 @@ The scripts build every path from their own location in the repository, so they 
 | `he_lung_atlas.h5ad`, `2022FetalLungIntCounts.h5ad` | human fetal lung, E-MTAB-11278 (He et al., 2022) | [Human Cell Atlas](https://explore.data.humancellatlas.org/projects/2fe3c60b-ac1a-4c61-9b59-f6556c0fce63) |
 | `BPD-PH/GSE275938_cell_metadata.csv`, `BPD-PH/GSE275938_compiled_counts.csv` | human infant lung, GSE275938 (Shirazi et al., 2025) | GEO [GSE275938](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE275938), [article](https://doi.org/10.1038/s41467-025-60371-7) |
 
-`he_lung_atlas.h5ad` is the atlas file `Assembled10DomainsFiltered.h5ad`, renamed; `2022FetalLungIntCounts.h5ad` and the two GSE275938 files are the published `.gz` files, decompressed (file list of the atlas: [fetal-lung.cellgeni.sanger.ac.uk](https://fetal-lung.cellgeni.sanger.ac.uk/scRNA.html)).
+The archives use other file names: rename `Assembled10DomainsFiltered.h5ad` to `he_lung_atlas.h5ad`, and decompress `2022FetalLungIntCounts.h5ad.gz`, `GSE275938_cell_metadata.csv.gz` and `GSE275938_compiled_counts.csv.gz` (file list of the atlas: [fetal-lung.cellgeni.sanger.ac.uk](https://fetal-lung.cellgeni.sanger.ac.uk/scRNA.html)).
 
-The rat rescued-gene tables read through `DGE_XLSX` in `ANALYSIS/common.py` also go to the repository root: `gcap rescue gene.xlsx`, `acap resuce gene.xlsx`, `pericyte_rescue gene.xlsx`, `Venous_rescue gene.xlsx`.
+The rat rescued-gene tables read through `DGE_XLSX` in `ANALYSIS/common.py` go to the same place: `gcap rescue gene.xlsx`, `acap resuce gene.xlsx`, `pericyte_rescue gene.xlsx`, `Venous_rescue gene.xlsx`.
 
 Model predictions are read from `retrain_v2/results/`: `test_inference_results_t10.jsonl`, `test_inference_results_t08.jsonl`, `test_inference_results_t12.jsonl`, `inference_azi_results.jsonl`, the outputs of the generation step (`pod/README.md`).
 
