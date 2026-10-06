@@ -8,5 +8,5 @@ __pycache__/
 BPD-PH/
 *rescue gene.xlsx
 *resuce gene.xlsx
-retrain_v2/results/
-retrain_v2/pipeline_short/sft_dataset_bidir/
+train/results/
+train/pipeline_short/sft_dataset_bidir/

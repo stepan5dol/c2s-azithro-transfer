@@ -1,4 +1,4 @@
-# azithropythia
+# c2s-azithro-transfer
 
 Prediction of azithromycin treatment of BPD in neonatals using c2s-scale fine-tuning cross-species transfer
 
@@ -10,9 +10,9 @@ Datasets: rat lung GSE300670 (room air, hyperoxia, hyperoxia + azithromycin), hu
 
 | Step | Script or file | Output |
 |---|---|---|
-| Cell sentences, split, pairs | `retrain_v2/pipeline_short/common.py`, `stage0_split.py`, `stage1_sft_bidir.py` | `cell_split_registry_short.csv`, `retrain_v2/pipeline_short/data_audit.csv`, `split_summary.csv`, `sft_dataset_bidir/{train,valid,test}.jsonl` |
-| Training segments | `retrain_v2/pipeline_short/build_axolotl_segments.py` | `*_segments.jsonl` |
-| Azithromycin prompts, three phrasings | `retrain_v2/pipeline_short/stage2_azi_inference.py`, `stage2_azi_inference_concise.py`, `stage2_azi_inference_ratmatch.py` | `inference_azi*.jsonl` |
+| Cell sentences, split, pairs | `train/pipeline_short/common.py`, `stage0_split.py`, `stage1_sft_bidir.py` | `cell_split_registry_short.csv`, `train/pipeline_short/data_audit.csv`, `split_summary.csv`, `sft_dataset_bidir/{train,valid,test}.jsonl` |
+| Training segments | `train/pipeline_short/build_axolotl_segments.py` | `*_segments.jsonl` |
+| Azithromycin prompts, three phrasings | `train/pipeline_short/stage2_azi_inference.py`, `stage2_azi_inference_concise.py`, `stage2_azi_inference_ratmatch.py` | `inference_azi*.jsonl` |
 | Fine-tuning | axolotl with `training/axolotl_sft_pythia1b_A100_used.yaml` | checkpoint-264 (best validation loss 2.199) |
 | Generation | `pod/run_test.py` and `pod/run_azi.py` (vLLM 0.30.0) | `test_inference_results_t10.jsonl` (test set, temperature 1.0; also t08 and t12), `inference_azi_results.jsonl` |
 
@@ -20,7 +20,7 @@ The header comment of the yaml predates the final dataset (13,886 / 60 / 892 exa
 
 ## Analysis
 
-`ANALYSIS` stands for `retrain_v2/analysis` and `ortho` for `ANALYSIS/real_counts_suite_ortho`.
+`ANALYSIS` stands for `train/analysis` and `ortho` for `ANALYSIS/real_counts_suite_ortho`.
 
 | Result | Scripts, in run order |
 |---|---|
@@ -47,21 +47,21 @@ The archives use other file names: rename `Assembled10DomainsFiltered.h5ad` to `
 
 The rat rescued-gene tables read through `DGE_XLSX` in `ANALYSIS/common.py` go to the same place: `gcap rescue gene.xlsx`, `acap resuce gene.xlsx`, `pericyte_rescue gene.xlsx`, `Venous_rescue gene.xlsx`.
 
-Model predictions are read from `retrain_v2/results/`: `test_inference_results_t10.jsonl`, `test_inference_results_t08.jsonl`, `test_inference_results_t12.jsonl`, `inference_azi_results.jsonl`, the outputs of the generation step (`pod/README.md`).
+Model predictions are read from `train/results/`: `test_inference_results_t10.jsonl`, `test_inference_results_t08.jsonl`, `test_inference_results_t12.jsonl`, `inference_azi_results.jsonl`, the outputs of the generation step (`pod/README.md`).
 
 Fine-tuning and generation ran on a GPU pod and keep its `/workspace` layout: the axolotl yaml lists the dataset and output paths under `/workspace/axolotl/mainwork/`, `pod/run_test.py` takes `MODEL_DIR`, `TEST_PATH` and `OUT_PATH` from the environment, and `pod/run_azi.py` takes the input and output paths as arguments. The logs keep the absolute paths of the machines where they were written.
 
-Included: the split registry and its audit tables, `scripts/cell_types_config.json`, the gene lists read at import by `retrain_v2/pipeline_short/common.py` (`train-after-grpo-analysis/rescued_*`), the training configuration and logs, and the environment lock files.
+Included: the split registry and its audit tables, `scripts/cell_types_config.json`, the gene lists read at import by `train/pipeline_short/common.py` (`train-after-grpo-analysis/rescued_*`), the training configuration and logs, and the environment lock files.
 
 Not included:
 - the single-cell data and the rat rescued-gene tables listed above;
-- the SFT dataset (`retrain_v2/pipeline_short/sft_dataset_bidir/`), rebuilt by `stage1_sft_bidir.py`;
-- the model predictions in `retrain_v2/results/`, produced by the generation step;
+- the SFT dataset (`train/pipeline_short/sft_dataset_bidir/`), rebuilt by `stage1_sft_bidir.py`;
+- the model predictions in `train/results/`, produced by the generation step;
 - Enrichr libraries, downloaded by `gseapy.get_library` at run time.
 
 ## Model weights
 
-Hugging Face `12mrch2023/sft-pythia1b-run4`, revision `27af97d2eae8e6be6de5272a269f67e378474a1c` (checkpoint-264, logs, predictions).
+Hugging Face [`dolzhenkosv/c2s-pythia-1b-azithro-transfer`](https://huggingface.co/dolzhenkosv/c2s-pythia-1b-azithro-transfer), revision `27af97d2eae8e6be6de5272a269f67e378474a1c` (checkpoint-264, logs, predictions).
 
 ## Environment
 

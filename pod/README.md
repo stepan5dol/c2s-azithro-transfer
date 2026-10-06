@@ -9,9 +9,9 @@ Machine: 1x A100-SXM4-80GB, vLLM 0.30.0, torch 2.13.0+cu130 (full details in `en
 | 1 | test | dataset/test_segments.jsonl | run_test.py | 1.0 | results/test_inference_results_t10.jsonl |
 | 2 | test | dataset/test_segments.jsonl | run_test.py | 0.8 | results/test_inference_results_t08.jsonl |
 | 3 | test | dataset/test_segments.jsonl | run_test.py | 1.2 | results/test_inference_results_t12.jsonl |
-| 4 | azi | lastrunpls retrain_v2/inference_azi.jsonl | run_azi.py | 1.0 | results/inference_azi_results.jsonl |
-| 5 | azi concise | lastrunpls retrain_v2/inference_azi_concise.jsonl | run_azi.py | 1.0 | results/inference_azi_concise_results.jsonl |
-| 6 | azi ratmatch | lastrunpls retrain_v2/inference_azi_ratmatch.jsonl | run_azi.py | 1.0 | results/inference_azi_ratmatch_results.jsonl |
+| 4 | azi | train/pipeline_short/inference_azi.jsonl | run_azi.py | 1.0 | results/inference_azi_results.jsonl |
+| 5 | azi concise | train/pipeline_short/inference_azi_concise.jsonl | run_azi.py | 1.0 | results/inference_azi_concise_results.jsonl |
+| 6 | azi ratmatch | train/pipeline_short/inference_azi_ratmatch.jsonl | run_azi.py | 1.0 | results/inference_azi_ratmatch_results.jsonl |
 
 Temperature is varied only on test (the only set with references); azi is run once at T=1.0, as in run3.
 

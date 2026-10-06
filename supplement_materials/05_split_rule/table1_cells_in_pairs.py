@@ -10,7 +10,7 @@ Pairing depends only on which barcodes are present, not on sentence text.
 import sys
 from pathlib import Path
 import pandas as pd
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "retrain_v2/analysis/real_counts_suite_ortho/human_panel_variants"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "train/analysis/real_counts_suite_ortho/human_panel_variants"))
 import recover_human_test_barcodes as R
 
 S1 = R.S1

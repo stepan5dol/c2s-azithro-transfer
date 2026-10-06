@@ -13,7 +13,7 @@ import pandas as pd
 import scanpy as sc
 import scipy.sparse as sp
 
-BASE = Path(__file__).resolve().parents[1]  # retrain_v2
+BASE = Path(__file__).resolve().parents[1]  # train
 DATA = BASE.parent                          # repository root, holds the input data
 
 RAT_PATH          = DATA / "rat.ho.azi.integrated.h5ad"

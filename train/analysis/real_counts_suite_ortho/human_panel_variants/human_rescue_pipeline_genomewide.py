@@ -65,7 +65,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-ABS_DIR = Path(__file__).resolve().parents[2]  # retrain_v2/analysis
+ABS_DIR = Path(__file__).resolve().parents[2]  # train/analysis
 PMA_DIR = ABS_DIR / "pathway_module_analysis"
 sys.path.insert(0, str(ABS_DIR))
 import common_human as CH

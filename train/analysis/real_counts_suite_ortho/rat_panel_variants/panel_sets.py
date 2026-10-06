@@ -34,7 +34,7 @@ from pathlib import Path
 
 import openpyxl
 
-ABS_DIR = Path(__file__).resolve().parents[2]  # retrain_v2/analysis
+ABS_DIR = Path(__file__).resolve().parents[2]  # train/analysis
 sys.path.insert(0, str(ABS_DIR))
 import common as C
 
