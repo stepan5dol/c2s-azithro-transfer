@@ -25,7 +25,7 @@ import re
 
 import numpy as np
 
-BASE = Path("/Users/stepandolzhenko/Documents/AzithroGemma")
+BASE = Path(__file__).resolve().parents[3]  # repository root
 RAT_PATH = BASE / "rat.ho.azi.integrated.h5ad"
 ATLAS_CLEAN_PATH = BASE / "he_lung_atlas.h5ad"
 ATLAS_RAW_PATH = BASE / "2022FetalLungIntCounts.h5ad"

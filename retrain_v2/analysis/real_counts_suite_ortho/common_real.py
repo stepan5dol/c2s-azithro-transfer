@@ -10,8 +10,8 @@ which is a fundamentally different (weaker, rank-only) comparison. See
 real_counts_suite/README.md for the criterion this suite holds to.
 
 Only T=1.0. Only these two files are source of truth for model answers:
-  /Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/results/test_inference_results_t10.jsonl  (rat+human non-AZI)
-  /Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/results/inference_azi_results.jsonl    (human AZI, default variant)
+  retrain_v2/results/test_inference_results_t10.jsonl  (rat+human non-AZI)
+  retrain_v2/results/inference_azi_results.jsonl    (human AZI, default variant)
 """
 from __future__ import annotations
 

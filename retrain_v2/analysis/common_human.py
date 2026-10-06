@@ -29,7 +29,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-BASE = Path("/Users/stepandolzhenko/Documents/AzithroGemma")
+BASE = Path(__file__).resolve().parents[2]  # repository root
 sys.path.insert(0, str(BASE))
 from pipeline.common import BPD_COUNTS_PATH
 
@@ -108,7 +108,7 @@ def he22_reference_by_ct(groups: dict[tuple[str, str], list[dict]], model) -> di
     return out
 
 
-AZI_RESULTS_PATH = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/results/inference_azi_results.jsonl")
+AZI_RESULTS_PATH = BASE / "retrain_v2/results/inference_azi_results.jsonl"
 _AGE_RE = re.compile(r"Age:\s*([^\n]+)")
 
 

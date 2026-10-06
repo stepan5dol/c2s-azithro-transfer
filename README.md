@@ -4,7 +4,7 @@ Prediction of azithromycin treatment of BPD in neonatals using c2s-scale fine-tu
 
 Code, configuration and logs for the fine-tuning of C2S-Scale-Pythia-1b-pt on paired single-cell profiles of lung endothelial cells and pericytes, and for the evaluation of the predictions.
 
-Datasets: rat lung AA000 (room air, hyperoxia, hyperoxia + azithromycin), human fetal lung E-MTAB-11278 (He et al., 2022), human infant lung GSE275938 (Shirazi et al., 2025). Cell types: general capillary endothelial, aerocyte capillary endothelial, venous endothelial cells, pericytes. Model: vandijklab/C2S-Scale-Pythia-1b-pt (Rizvi et al., 2025), full fine-tuning with axolotl.
+Datasets: rat lung GSE300670 (room air, hyperoxia, hyperoxia + azithromycin), human fetal lung E-MTAB-11278 (He et al., 2022), human infant lung GSE275938 (Shirazi et al., 2025). Cell types: general capillary endothelial, aerocyte capillary endothelial, venous endothelial cells, pericytes. Model: vandijklab/C2S-Scale-Pythia-1b-pt (Rizvi et al., 2025), full fine-tuning with axolotl.
 
 ## Pipeline
 
@@ -35,19 +35,28 @@ The header comment of the yaml predates the final dataset (13,886 / 60 / 892 exa
 
 ## Paths and inputs
 
-The scripts contain absolute paths of the machine where they ran: the project root `/Users/stepandolzhenko/Documents/AzithroGemma` (the root of this repository) and `/Users/stepandolzhenko/Downloads` (generated predictions). To run them elsewhere, replace the prefixes, for example on macOS
+The scripts build every path from their own location in the repository, so they run from a fresh clone and from any working directory without editing. The single-cell data, used both for training and for the analysis, are not part of this repository: download them from the archives below into the root of your local clone, under the names in the first column.
 
-    grep -rlI --exclude-dir=.git "/Users/stepandolzhenko/Documents/AzithroGemma" . | xargs sed -i '' "s#/Users/stepandolzhenko/Documents/AzithroGemma#$PWD#g"
+| Path in the repository | Dataset | Source |
+|---|---|---|
+| `rat.ho.azi.integrated.h5ad` | rat lung, room air, hyperoxia, hyperoxia + azithromycin | GEO [GSE300670](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE300670) |
+| `he_lung_atlas.h5ad`, `2022FetalLungIntCounts.h5ad` | human fetal lung, E-MTAB-11278 (He et al., 2022) | [Human Cell Atlas](https://explore.data.humancellatlas.org/projects/2fe3c60b-ac1a-4c61-9b59-f6556c0fce63) |
+| `BPD-PH/GSE275938_cell_metadata.csv`, `BPD-PH/GSE275938_compiled_counts.csv` | human infant lung, GSE275938 (Shirazi et al., 2025) | GEO [GSE275938](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE275938), [article](https://doi.org/10.1038/s41467-025-60371-7) |
 
-(on Linux, `sed -i` without the empty string), and the same for `/Users/stepandolzhenko/Downloads`.
+The archives use other file names: rename `Assembled10DomainsFiltered.h5ad` to `he_lung_atlas.h5ad`, and decompress `2022FetalLungIntCounts.h5ad.gz`, `GSE275938_cell_metadata.csv.gz` and `GSE275938_compiled_counts.csv.gz` (file list of the atlas: [fetal-lung.cellgeni.sanger.ac.uk](https://fetal-lung.cellgeni.sanger.ac.uk/scRNA.html)).
+
+The rat rescued-gene tables read through `DGE_XLSX` in `ANALYSIS/common.py` go to the same place: `gcap rescue gene.xlsx`, `acap resuce gene.xlsx`, `pericyte_rescue gene.xlsx`, `Venous_rescue gene.xlsx`.
+
+Model predictions are read from `retrain_v2/results/`: `test_inference_results_t10.jsonl`, `test_inference_results_t08.jsonl`, `test_inference_results_t12.jsonl`, `inference_azi_results.jsonl`, the outputs of the generation step (`pod/README.md`).
+
+Fine-tuning and generation ran on a GPU pod and keep its `/workspace` layout: the axolotl yaml lists the dataset and output paths under `/workspace/axolotl/mainwork/`, `pod/run_test.py` takes `MODEL_DIR`, `TEST_PATH` and `OUT_PATH` from the environment, and `pod/run_azi.py` takes the input and output paths as arguments. The logs keep the absolute paths of the machines where they were written.
 
 Included: the split registry and its audit tables, `scripts/cell_types_config.json`, the gene lists read at import by `retrain_v2/pipeline_short/common.py` (`train-after-grpo-analysis/rescued_*`), the training configuration and logs, and the environment lock files.
 
 Not included:
-- single-cell data: `rat.ho.azi.integrated.h5ad` (AA000), `he_lung_atlas.h5ad` and `2022FetalLungIntCounts.h5ad` (E-MTAB-11278), `BPD-PH/GSE275938_cell_metadata.csv` and `GSE275938_compiled_counts.csv` (GSE275938);
+- the single-cell data and the rat rescued-gene tables listed above;
 - the SFT dataset (`retrain_v2/pipeline_short/sft_dataset_bidir/`), rebuilt by `stage1_sft_bidir.py`;
-- model predictions (`test_inference_results3.jsonl`, `test_inference_results_t08.jsonl`, `inference_azi_results.jsonl`), produced by the generation step;
-- the rat rescued-gene tables read through `DGE_XLSX` in `ANALYSIS/common.py`;
+- the model predictions in `retrain_v2/results/`, produced by the generation step;
 - Enrichr libraries, downloaded by `gseapy.get_library` at run time.
 
 ## Model weights

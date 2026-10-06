@@ -28,7 +28,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-ABS_DIR = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/analysis")
+ABS_DIR = Path(__file__).resolve().parents[2]  # retrain_v2/analysis
 PMA_DIR = ABS_DIR / "pathway_module_analysis"
 sys.path.insert(0, str(ABS_DIR))
 import common_human as CH  # noqa: E402

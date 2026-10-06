@@ -16,7 +16,7 @@ before trusting this on a full run).
 import json
 from pathlib import Path
 
-SFT_DIR = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/pipeline_short/sft_dataset_bidir")
+SFT_DIR = Path(__file__).resolve().parent / "sft_dataset_bidir"
 
 for split in ["train", "valid", "test"]:
     src = SFT_DIR / f"{split}.jsonl"

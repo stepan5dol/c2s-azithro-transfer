@@ -13,13 +13,14 @@ import pandas as pd
 import scanpy as sc
 import scipy.sparse as sp
 
-BASE = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2")
+BASE = Path(__file__).resolve().parents[1]  # retrain_v2
+DATA = BASE.parent                          # repository root, holds the input data
 
-RAT_PATH          = BASE / "rat.ho.azi.integrated.h5ad"
-ATLAS_CLEAN_PATH  = BASE / "he_lung_atlas.h5ad"
-ATLAS_RAW_PATH    = BASE / "2022FetalLungIntCounts.h5ad"
-BPD_META_PATH     = BASE / "BPD-PH/GSE275938_cell_metadata.csv"
-BPD_COUNTS_PATH   = BASE / "BPD-PH/GSE275938_compiled_counts.csv"
+RAT_PATH          = DATA / "rat.ho.azi.integrated.h5ad"
+ATLAS_CLEAN_PATH  = DATA / "he_lung_atlas.h5ad"
+ATLAS_RAW_PATH    = DATA / "2022FetalLungIntCounts.h5ad"
+BPD_META_PATH     = DATA / "BPD-PH/GSE275938_cell_metadata.csv"
+BPD_COUNTS_PATH   = DATA / "BPD-PH/GSE275938_compiled_counts.csv"
 
 RESCUED_RAT_PATH   = BASE / "train-after-grpo-analysis/rescued_rat_genes.txt"
 RESCUED_HUMAN_PATH = BASE / "train-after-grpo-analysis/rescued_human_genes.txt"

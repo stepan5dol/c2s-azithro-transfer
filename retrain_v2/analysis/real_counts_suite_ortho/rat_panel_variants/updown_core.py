@@ -34,7 +34,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from scipy.stats import mannwhitneyu
 
-ABS_DIR = Path("/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/analysis")
+ABS_DIR = Path(__file__).resolve().parents[2]  # retrain_v2/analysis
 sys.path.insert(0, str(ABS_DIR))
 import common as C
 import plot_style as PS
@@ -49,7 +49,7 @@ import panel_sets as PSets
 HERE = Path(__file__).parent
 CSV_PATH = HERE.parent / "rat" / "recovered_rat_test_pairs.csv"
 TEST_INFERENCE_PATH = Path(os.environ.get("TEST_INFERENCE_PATH",
-    "/Users/stepandolzhenko/Documents/AzithroGemma/retrain_v2/results/test_inference_results_t10.jsonl"))
+    Path(__file__).resolve().parents[3] / "results/test_inference_results_t10.jsonl"))
 
 CT_RAW_TO_CT = {"general capillary endothelial cell (endothelial)": "gCap",
                 "aerocyte capillary endothelial cell (endothelial)": "aCap",
