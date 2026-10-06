@@ -61,7 +61,7 @@ Not included:
 
 ## Model weights
 
-Hugging Face [`dolzhenkosv/c2s-pythia-1b-azithro-transfer`](https://huggingface.co/dolzhenkosv/c2s-pythia-1b-azithro-transfer), revision `dd00e8c032b7fc62fdf36cfc5fe7ce6fab84e36c`: the model used in the study (`sft_pythia1b_short_full/checkpoint-264`), the training data, configuration and logs, and the predictions.
+Hugging Face [`dolzhenkosv/c2s-pythia-1b-azithro-transfer`](https://huggingface.co/dolzhenkosv/c2s-pythia-1b-azithro-transfer), revision `040f129aafc483852e54a7ccf078f7cc1a2286f5`: the model used in the study (`sft_pythia1b_short_full/checkpoint-264`), the training data, configuration and logs, and the predictions.
 
 ## Environment
 
