@@ -1,6 +1,6 @@
 # Software and hardware environment
 
-Lock files in this folder: `conda_base_environment_2026-10-01.yml`, `pip_freeze_base_2026-10-01.txt`, `R_sessionInfo_2026-10-01.txt`.
+Lock files in this folder: `pip_freeze_base_2026-10-01.txt`, `R_sessionInfo_2026-10-01.txt`.
 
 ## Dataset assembly, analysis, figures (local)
 
