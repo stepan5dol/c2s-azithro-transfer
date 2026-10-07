@@ -1,28 +1,15 @@
 #!/usr/bin/env python3
 """
-recover_human_test_barcodes.py — human counterpart of
-rat/recover_rat_test_barcodes.py: reconstruct which real barcodes back each
-fwd HUMAN example in the TEST split, so downstream tests can pull TRUE raw
-counts instead of reconstructing the real side through the lossy
-rank->expression model.
+Recovers the measured barcodes behind each forward human test example, as
+rat/recover_rat_test_barcodes.py does for rat.
 
-Same mechanism, same reason it works: pipeline_short/stage1_sft_bidir.py's
-_build_pairs samples src/tgt barcodes with a seeded RNG
-(_pair_seed = MD5(split|pair_type|cell_type) + RANDOM_SEED), fully
-deterministic, and _save() drops the barcodes when writing test.jsonl. So we
-re-run the same pairing calls, patched only to keep the barcodes.
+SFTBuilder.run() concatenates the rat pairs and then the human pairs before
+_dedup_reverse, so both blocks are replayed in that order, deduplicated
+together and then enumerated. Each row is verified by exact match of the
+completion with the "gt" field of test_inference_results_t10.jsonl.
 
-INDEXING -- the one thing that differs from the rat script. SFTBuilder.run()
-does `pairs += self._rat_pairs(...)` and THEN `pairs += self._human_pairs(...)`,
-and _dedup_reverse runs on the combined list. The rat script could enumerate
-its own block alone because rat is the prefix; human is not, so here both
-blocks are replayed, concatenated in run()'s order, deduped together, and
-only then enumerated. Any error in that reasoning shows up immediately as a
-verification failure, since every row is checked by exact string match of the
-recovered target cell sentence against test_inference_results3.jsonl's "gt".
-
-Output: recovered_human_test_pairs.csv
-  (idx, pair_type, cell_type, src_barcode, tgt_barcode, verified)
+Output: recovered_human_test_pairs.csv (idx, pair_type, cell_type,
+src_barcode, tgt_barcode, verified).
 """
 from __future__ import annotations
 
@@ -46,8 +33,9 @@ def _build_pairs_with_barcodes(
     cell_type, pert_str, pair_type, split, n_per_ct, n_augment,
     age_str_tgt=None, pma_weeks_tgt=None, bidirectional=False, rev_pert_str=None,
 ):
-    """Exact copy of stage1_sft_bidir._build_pairs, extended to stash
-    src_barcode/tgt_barcode on every pair. Same RNG calls in the same order."""
+    """stage1_sft_bidir._build_pairs with src_barcode and tgt_barcode added to
+    each pair; RNG calls and their order are unchanged.
+    """
     rev_pert_str = pert_str if rev_pert_str is None else rev_pert_str
     src = [bc for bc in src_bcs if bc in src_sent]
     tgt = [bc for bc in tgt_bcs if bc in tgt_sent]
@@ -87,8 +75,7 @@ def _build_pairs_with_barcodes(
 
 
 def rat_pairs_with_barcodes(split, reg, sent):
-    """Copy of SFTBuilder._rat_pairs -- replayed only to get the index offset
-    right; its barcodes are already recovered by rat/recover_rat_test_barcodes.py."""
+    """SFTBuilder._rat_pairs, replayed for the index offset of the human block."""
     reg_s = reg[(reg["source"] == "rat") & (reg["split"] == split)]
     pairs = []
     for sc, tc in [("RA", "HO"), ("HO", "AZI")]:
@@ -111,7 +98,7 @@ def rat_pairs_with_barcodes(split, reg, sent):
 
 
 def human_pairs_with_barcodes(split, reg, atl_s, bpd_s):
-    """Copy of SFTBuilder._human_pairs, calling the barcode-capturing builder."""
+    """SFTBuilder._human_pairs with the barcode-keeping builder."""
     atl = reg[(reg["source"] == "atlas") & (reg["split"] == split)]
     bpd = reg[(reg["source"] == "bpd") & (reg["split"] == split)]
     pairs = []
@@ -143,7 +130,7 @@ def human_pairs_with_barcodes(split, reg, atl_s, bpd_s):
 
 
 def dedup_reverse(pairs):
-    """Verbatim logic of SFTBuilder._dedup_reverse (fwd untouched)."""
+    """Same logic as SFTBuilder._dedup_reverse."""
     seen, out = set(), []
     for ex in pairs:
         if not ex["pair_type"].endswith("_rev"):
@@ -181,7 +168,7 @@ def main():
                  if ex["pair_type"].startswith("human_") and not ex["pair_type"].endswith("_rev")]
     print(f"[filter] {len(fwd_human)} fwd human entries")
 
-    print("[verify] matching against test_inference_results3.jsonl 'gt'...")
+    print("[verify] matching against 'gt' of test_inference_results_t10.jsonl...")
     gt_by_idx = {}
     with open(TEST_INFERENCE_PATH) as f:
         for line in f:

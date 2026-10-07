@@ -1,21 +1,9 @@
 #!/usr/bin/env python3
 """
-A8 equivalence, real-counts version, human. Same construction as
-rat/a8_equivalence_real.py: is model-pred-to-real-cell distance within the
-envelope of real-cell-to-real-cell variability?
-
-Only the no-AZI disease-trajectory arms are buildable this way (Acute26,
-BPD7mo, BPDPH7mo -- each has a real target population with real raw counts).
-The AZI-counterfactual arm has NO real-cell envelope at all -- no human
-patient in this cohort ever received azithromycin (see
-pathway_module_analysis/human_rescue_gene_pipeline.py's docstring) -- so it
-is not included here, not omitted by oversight.
-
-gt_gt = pairwise real-real distances within the real disease population
-(top-800-truncated). cross = model's no-AZI forward pred (reconstructed) vs
-that same real population.
-
-Only T=1.0 / test_inference_results3.jsonl (see real_counts_suite/README.md).
+Equivalence of predicted cells to measured cell-to-cell variability, human,
+on measured counts: real-real pairwise distances within the measured disease
+cells (top-800 truncated) and distances from the model's forward predictions
+to the same cells, for Acute26, BPD7mo and BPDPH7mo.
 """
 from __future__ import annotations
 

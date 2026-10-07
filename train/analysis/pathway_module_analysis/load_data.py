@@ -1,6 +1,7 @@
-"""Raw-data loaders for the rat and human sides. No subsampling, no caching
-tricks -- every function reads straight from the source files listed in
-common.py. Human loaders return raw (unnormalized) counts; caller normalizes."""
+"""
+Raw-data loaders for the rat and human datasets (paths in common.py). Human
+loaders return raw counts; the caller normalizes.
+"""
 from __future__ import annotations
 
 import sys

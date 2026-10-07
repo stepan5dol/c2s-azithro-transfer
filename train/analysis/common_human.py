@@ -1,25 +1,14 @@
 """
-common_human.py — human-side counterpart to common.py.
+Human counterpart of common.py.
 
-Data sources (per pipeline/common.py, the pipeline that actually built these
-datasets -- reused here directly instead of re-derived):
-  - Cell records: the SAME inference JSONLs as the rat analysis (common.RUNS).
-    They already contain "Homo sapiens" fwd-direction records (453 of them);
-    the rat scripts just filter those out via species.startswith("Rattus").
-  - Calibration counts: BPD-PH/GSE275938_compiled_counts.csv (pipeline.common.
-    BPD_COUNTS_PATH) -- the raw-counts source pipeline/stage0_split.py's
-    _load_bpd() uses for the Acute26/BPD7mo/BPDPH7mo conditions. This is NOT
-    he_lung_atlas.h5ad / 2022FetalLungIntCounts.h5ad (those back the He15-22
-    healthy-atlas timepoints, a different transition not covered here).
+Cell records come from the same inference files as the rat analysis
+(common.RUNS), filtered to Homo sapiens; calibration counts from
+BPD-PH/GSE275938_compiled_counts.csv. Three transitions, each relative to the
+baseline cell in the record's "Unexposed:" field:
 
-No AZI (treatment) arm exists for human -- these are three disease-trajectory
-transitions, each measured against its OWN baseline (embedded in the record's
-"Unexposed:" field, exactly like common.py's rat convention):
-  Acute   : GW22 healthy fetal lung          -> GW26 acute preterm injury
-  BPD     : GW26 acute preterm injury        -> 7mo bronchopulmonary dysplasia
-  BPD-PH  : GW26 acute preterm injury        -> 7mo BPD with pulmonary hypertension
-BPD and BPD-PH are independent chronic outcomes from the same acute baseline,
-not a progression from one to the other.
+  Acute   He22 fetal lung                 -> Acute26 acute preterm injury
+  BPD     Acute26 acute preterm injury    -> BPD at 7 months
+  BPD-PH  Acute26 acute preterm injury    -> BPD with pulmonary hypertension at 7 months
 """
 from __future__ import annotations
 
@@ -84,16 +73,11 @@ def condition_of(perturbation: str) -> str | None:
 
 
 def he22_reference_by_ct(groups: dict[tuple[str, str], list[dict]], model) -> dict[str, "np.ndarray"]:
-    """Mean reconstructed He22 (healthy, GW22) expression per cell type.
+    """Mean reconstructed He22 expression per cell type.
 
-    Only the Acute condition's records carry a real He22 cell in their own
-    "Unexposed:" field (verified against the raw prompt's Age: line -- Acute's
-    baseline is GW22, BPD's and BPD-PH's is GW26/Acute26, not He22). To
-    compare every condition against the SAME healthy reference, pool the
-    Acute group's per-record He22 baselines per cell type and take the mean;
-    that mean vector substitutes for BPD/BPD-PH's own (Acute26) "Unexposed:"
-    field in delta computations that must be anchored to health, not to the
-    immediately preceding disease stage.
+    Taken from the "Unexposed:" field of the Acute records, the only condition
+    whose baseline is He22; used as a common healthy reference for all
+    conditions.
     """
     import numpy as np
     import rank_expr_model as rem
@@ -113,9 +97,9 @@ _AGE_RE = re.compile(r"Age:\s*([^\n]+)")
 
 
 def condition_of_age(age: str) -> str | None:
-    """Bucket a record by its Age: line (COND_META age_str per pipeline.common),
-    since in AZI_RESULTS_PATH every record's Perturbation: line is the SAME
-    AZI-treatment string -- the disease stage is only distinguishable via age."""
+    """Condition of a record in AZI_RESULTS_PATH from its Age: line; all of
+    these records share the same Perturbation: line.
+    """
     if "acute preterm injury" in age:
         return "Acute"
     if "BPD with pulmonary hypertension" in age:
@@ -126,11 +110,10 @@ def condition_of_age(age: str) -> str | None:
 
 
 def load_azi_counterfactual(jsonl_path: Path = AZI_RESULTS_PATH) -> dict[tuple[str, str], list[dict]]:
-    """Human AZI counterfactual: real disease-state baseline ("Unexposed:")
-    paired with the model's predicted post-AZI cell sentence ("pred"). No
-    ground truth exists (gt is always empty in this file) -- azithromycin was
-    never actually given to these human patients; "pred" is what the model,
-    trained on rat AZI response, predicts would happen if it were."""
+    """Human azithromycin predictions: the measured baseline cell
+    ("Unexposed:") and the model's predicted cell sentence ("pred"). There is no
+    ground truth: these patients did not receive azithromycin.
+    """
     groups: dict[tuple[str, str], list[dict]] = defaultdict(list)
     with open(jsonl_path) as f:
         for line in f:

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-equivalence_human_beautiful.py — human counterpart to a8_equivalence_beautiful.py.
-Same statistic: pooled ECDF of real-real pairwise distance (cell-to-cell
-variability envelope) vs. model-real cross distance, in calibrated expression
-space, over the three human disease-trajectory conditions (Acute/BPD/BPD-PH).
+Equivalence of predicted cells to measured cell-to-cell variability, human:
+pooled ECDF of real-real pairwise distances and of model-real distances in
+calibrated expression space over Acute, BPD and BPD-PH, for each sampling
+temperature in common.RUNS.
 """
 from __future__ import annotations
 

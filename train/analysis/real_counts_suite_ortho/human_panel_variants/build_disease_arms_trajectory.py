@@ -1,28 +1,17 @@
 #!/usr/bin/env python3
 """
-build_disease_arms_trajectory.py — the three disease arms that compare a
-diseased state against a healthy one, which is the contrast the rescued-gene
-panel itself is defined on (p_val_adj_HO is term-born -> disease):
+Human rescued-gene delta figures for three transitions from a healthy to a
+diseased state:
 
-    fetal lung GW22       -> acute preterm lung injury GW26   (paired)
-    term-born control     -> BPD, 7 months postnatal          (random baseline)
-    term-born control     -> BPD-PH, 7 months postnatal        (random baseline)
+    He22 fetal lung       -> Acute26 acute preterm lung injury   (paired)
+    term-born control     -> BPD, 7 months postnatal             (random baseline)
+    term-born control     -> BPD-PH, 7 months postnatal          (random baseline)
 
-The SFT data instead pairs BPD and BPD-PH off the acute-injury cell
-(common_human.py:18-20), i.e. disease against an earlier disease stage. Those
-arms are deliberately NOT built: a delta measured from an already-diseased
-baseline is not comparable to a panel defined against health.
-
-Term0d/Term20d cells are absent from the pairing registry entirely, so no
-paired term-born -> disease example exists; the term-born baseline is drawn at
-random within cell type (seeded), which is recorded per arm as
-pairing="random_within_ct".
-
-He22 source cells live in the atlas h5ad, not compiled_counts.csv, so they
-are loaded separately and reindexed onto the model's gene axis.
-
-Model side is unchanged in all three: pred is the model's prediction for that
-test example, differenced against the same baseline cell as the real arm.
+Term0d and Term20d cells are not in the pairing registry, so the term-born
+baseline is drawn at random within cell type (seeded; pairing
+"random_within_ct"). He22 cells are read from the atlas h5ad and reindexed
+onto the model gene axis. The model delta uses the same baseline cell as the
+real delta. Figures are drawn by human_updown_percell.py.
 """
 from __future__ import annotations
 
@@ -103,9 +92,10 @@ def load_bpd_by_barcode(barcodes, model):
 
 
 def load_atlas_by_barcode(barcodes, model):
-    """He22 source cells. The clean atlas carries the barcodes the pairing used;
-    counts come from the raw atlas, matched the same way stage1 matches them
-    (exact, else drop the trailing sample suffix)."""
+    """He22 cells: barcodes from the clean atlas, counts from the raw atlas,
+    matched exactly or without the trailing sample suffix, as in
+    stage1_sft_bidir.py.
+    """
     print("  [atlas] reading clean atlas for barcode space...")
     clean = anndata.read_h5ad(S1.ATLAS_CLEAN_PATH)
     clean_obs = clean.obs_names.tolist()

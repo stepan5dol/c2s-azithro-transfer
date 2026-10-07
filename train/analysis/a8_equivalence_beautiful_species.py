@@ -1,22 +1,19 @@
 #!/usr/bin/env python3
 """
-a8_equivalence_beautiful_species.py — copy of a8_equivalence_beautiful.py,
-parametrized to run the SAME A8 equivalence test (pred-gt cross distance vs
-gt-gt real-cell-variability envelope, Q90 threshold) on both species:
+Equivalence of predicted cells to measured cell-to-cell variability, rat and
+human: pooled ECDFs of real-real pairwise distances and of model-real
+distances in calibrated expression space; the 90th percentile of the
+real-real distances is the envelope.
 
-  - rat: common.py (C), rat.ho.azi.integrated.h5ad calibration, HO/AZI, 4 cell
-    types x 2 conditions = 8 groups pooled -- identical to the original script.
-  - human: common_human.py (CH), calibration fit on the real BPD-PH counts
-    csv (not the rat h5ad), Acute/BPD/BPD-PH, 4 cell types x 3 conditions =
-    12 groups pooled. Uses the SAME construction as rat: for each condition,
-    gt = the real next-disease-stage cell, pred = the model's forward
-    prediction from the same real baseline (this is NOT the AZI
-    counterfactual file -- there is no real ground truth for that one).
+  rat    common.py, calibration on rat.ho.azi.integrated.h5ad, HO and AZI,
+         4 cell types x 2 conditions
+  human  common_human.py, calibration on the GSE275938 counts, Acute, BPD and
+         BPD-PH, 4 cell types x 3 conditions; gt is the measured next-stage
+         cell, pred the forward prediction from the same baseline
 
 Output: figures/figures_beautiful/<tag>/equivalence_to_real_variability.png
-(rat, same path as the original) and
-figures_human/figures_beautiful/<tag>/equivalence_to_real_variability.png
-(human, new).
+(rat) and figures_human/figures_beautiful/<tag>/equivalence_to_real_variability.png
+(human).
 """
 from __future__ import annotations
 

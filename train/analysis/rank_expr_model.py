@@ -1,31 +1,17 @@
 """
-rank_expr_model.py — calibrated rank -> absolute expression reconstruction.
+Rank -> expression reconstruction for cell sentences.
 
-Cell sentences carry gene ORDER only (rank), not values. To compare gt/pred
-cell sentences in expression space rather than rank-distance space, we need
-a rank -> expression map.
-
-C2S-Scale (NIHPP 2025.04.14.648850v4, Supp. Fig. 8) fits this as LINEAR IN
-LOG-RANK, not raw rank:
+Cell sentences carry gene order only. As in C2S-Scale (Rizvi et al., 2025,
+Supp. Fig. 8), expression is modelled as linear in log-rank:
 
     log1p_cpm10k(gene) ~= intercept + slope * log(rank + 1)
 
-Verified empirically on rat.ho.azi.integrated.h5ad (counts layer, K=800,
-n=2000 cells, seed=0):
-    raw-rank fit:  R^2 = 0.639
-    log-rank fit:  R^2 = 0.836   <- matches paper's 0.82-0.87 range
+On rat.ho.azi.integrated.h5ad (counts layer, K=800, 2,000 cells, seed 0) the
+fit gives R^2 = 0.836 for log-rank and 0.639 for raw rank.
 
-So log-rank is used here, not raw rank.
-
-The model is fit ONCE on real counts from the ground-truth h5ad, then
-applied IDENTICALLY to both gt and pred gene-rank-lists coming out of
-inference. Both sides pass through the same reconstruction loss, so
-gt-vs-pred comparisons in reconstructed-expression space are fair (the
-comparison never touches real counts for pred, which has none).
-
-Caveat carried through by design: this is one global linear curve, not
-per-cell true counts. Always report r2 alongside any downstream metric
-built on top of this reconstruction.
+The model is fitted once on measured counts and applied identically to
+measured and predicted cell sentences. It is a single global curve, so r2 is
+reported with every metric built on it.
 """
 from __future__ import annotations
 
@@ -50,10 +36,7 @@ class RankExprModel(NamedTuple):
 
 
 def _fit_from_matrix(X: np.ndarray, gene_names: list[str], k: int, n_cells: int, seed: int) -> RankExprModel:
-    """Shared calibration core: raw counts [n_cells, n_genes] -> RankExprModel.
-    Used by both fit() (h5ad source) and fit_from_csv() (CSV source, e.g. the
-    human GSE275938 compiled-counts table) so the log-rank -> log1p(CPM10k)
-    math is defined exactly once."""
+    """Raw counts [n_cells, n_genes] -> RankExprModel; shared by fit() and fit_from_csv()."""
     rng = np.random.default_rng(seed)
     idx = rng.choice(len(X), size=min(n_cells, len(X)), replace=False)
     X = X[idx]
@@ -107,13 +90,10 @@ def fit_from_csv(
     seed: int = 0,
     id_col: str = "id",
 ) -> RankExprModel:
-    """Fit log-rank -> log1p(CPM10k) linear model on real counts stored as a
-    wide cells x genes CSV (e.g. BPD-PH/GSE275938_compiled_counts.csv -- the
-    human Acute/BPD/BPD-PH raw-counts source per pipeline/common.py's
-    BPD_COUNTS_PATH). Reads a random n_cells-row subsample directly (the file
-    is tens of thousands of rows / 3+ GB, too large to load whole), via
-    skiprows on a pre-drawn random row-index set -- same sampling semantics
-    as fit()'s rng.choice over an in-memory matrix."""
+    """Fit log-rank -> log1p(CPM10k) on raw counts in a wide cells x genes CSV
+    (e.g. BPD-PH/GSE275938_compiled_counts.csv). Reads a random subsample of
+    n_cells rows without loading the whole file.
+    """
     import pandas as pd
 
     with open(counts_csv_path) as f:
@@ -131,14 +111,11 @@ def fit_from_csv(
 
 def reconstruct(genes: list[str], model: RankExprModel, k: int = 800,
                  floor_rank: int | None = None) -> np.ndarray:
-    """Rank-ordered gene-name list -> dense [n_genes] log1p(CPM10k) vector.
+    """Rank-ordered gene list -> dense [n_genes] log1p(CPM10k) vector.
 
-    Genes absent from the list default to 0 ("not measured"). Pass
-    floor_rank (e.g. k+1) to instead give absent genes the model's calibrated
-    value AT that rank -- i.e. "at most this low", not "exactly zero". Only
-    meaningful for cell sentences with no real-count alternative (model
-    output); real measured cells should skip reconstruction entirely and use
-    their actual counts instead (see pathway_module_analysis/real_counts.py)."""
+    Genes absent from the list are 0 or, with floor_rank, the model value at
+    that rank.
+    """
     vec = np.zeros(model.n_genes, dtype=np.float32)
     if floor_rank is not None:
         floor_val = model.intercept + model.slope * np.log(floor_rank + 1.0)

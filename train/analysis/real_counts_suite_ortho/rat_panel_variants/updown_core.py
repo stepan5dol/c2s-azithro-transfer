@@ -1,22 +1,18 @@
 #!/usr/bin/env python3
 """
-updown_core.py — shared machinery for the rat_panel_variants figures.
+Per-cell rescued-gene deltas for the rat figures.
 
-Same per-cell delta construction as
-rat_top800_both_arms/rescue_delta_*_top800_both_arms.py (BOTH real sides
-top-800-truncated, model arm = pred - topk(real source cell)), with two
-changes, both of them the point of this folder:
+For each test example, with both measured cells truncated to their top 800
+genes:
 
-  1. Rescued_HO_down and Rescued_HO_up are drawn as SEPARATE violins instead
-     of only "down" being plotted. Background is now everything outside
-     down UNION up -- in the older scripts the "up" genes sat inside the
-     background set, which blunts the background baseline.
-  2. The panel gate is a parameter (panel_sets.GATES), so the p_val_adj_AZI
-     selection can be switched off.
+    delta_real  = topk(target cell) - topk(source cell)
+    delta_model = prediction (reconstructed) - topk(source cell)
 
-Six violins per cell type: REAL[bg, down, up] | MODEL[bg, down, up].
-Brackets are bg-vs-down and bg-vs-up within each arm -- the two arms are
-never tested against each other, same as in the original scripts.
+Genes are split into hyperoxia-suppressed (Rescued_HO_down),
+hyperoxia-induced (Rescued_HO_up) and background (all other genes), and each
+cell contributes its mean delta over each subset. Six violins per cell type:
+REAL[bg, down, up] | MODEL[bg, down, up]. Within each block, down and up are
+compared with background (two-sided Mann-Whitney U).
 """
 from __future__ import annotations
 
@@ -87,7 +83,7 @@ ONLY_CT = None
 
 
 def load_real_counts_by_barcode(barcodes: list[str], gene_names: list[str]) -> dict[str, np.ndarray]:
-    """log1p(CPM10k), EXACT same recipe as rank_expr_model._fit_from_matrix."""
+    """log1p(CPM10k) per barcode, as in rank_expr_model._fit_from_matrix."""
     print("  [real] reading rat.ho.azi.integrated.h5ad raw counts...")
     adata = anndata.read_h5ad(C.H5AD)
     X = adata.layers["counts"] if "counts" in adata.layers else adata.X
@@ -166,9 +162,7 @@ def draw_panel(ax, scores, title, delta_label, expected, show_legend=False):
 
 
 def legend_handles_labels(expected):
-    """Placed on the FIGURE, under the axes -- inside the axes it sat on top of
-    the left-hand violin. Same construction as the human core, so the two panels
-    of the main figure carry identical legends."""
+    """Legend handles for the three gene subsets, placed below the axes."""
     h = [plt.Rectangle((0, 0), 1, 1, facecolor=PS.HO_COLOR, edgecolor="#333333", alpha=0.85),
          plt.Rectangle((0, 0), 1, 1, facecolor="#bbbbbb", edgecolor="#333333", alpha=0.85),
          plt.Rectangle((0, 0), 1, 1, facecolor="#bbbbbb", edgecolor="#333333", alpha=0.85, hatch="///")]

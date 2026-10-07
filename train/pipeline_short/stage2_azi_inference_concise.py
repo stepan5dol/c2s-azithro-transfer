@@ -1,24 +1,9 @@
 #!/usr/bin/env python3
 """
-pipeline_short/stage2_azi_inference_concise.py — AZI counterfactual inference builder (concise prompt variant).
+Stage 2, concise wording: as stage2_azi_inference.py, with a shorter
+AZI_PERTURBATION without "low maintenance dose".
 
-Same as stage2_azi_inference.py, but with a shorter AZI_PERTURBATION wording
-that drops the "low maintenance dose" framing, to compare which prompt
-phrasing transfers the AZI signal from rat to human better.
-
-Human clinical translation: for every held-out (test + valid) BPD-source cell
-in Acute26 / BPD7mo / BPDPH7mo, build a prompt asking the model to predict the
-cell's expression under oral azithromycin treatment (AZI_PERTURBATION). There
-is no ground truth for this counterfactual (azithromycin was never given to
-these patients), so rows are prompt-only — no "completion" field.
-
-Strictly split=="test" or split=="valid" barcodes from cell_split_registry_short.csv
-(never train — checked below). Scope matches TARGET_HUMAN_CELL_TYPES (gCap,
-aCap, Pulmonary venous EC, Pericyte), the scope shared with SFT.
-
-Writes a single combined file:
-  pipeline_short/inference_azi_concise.jsonl
-Each line: {"prompt": ..., "condition": ..., "cell_type": ..., "split": ..., "barcode": ...}
+Output: pipeline_short/inference_azi_concise.jsonl
 """
 from __future__ import annotations
 

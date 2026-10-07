@@ -1,25 +1,18 @@
 #!/usr/bin/env python3
 """
-pipeline_short/stage1_sft_bidir.py — Leakage-free SFT dataset builder (bidirectional),
-minimally-viable scope: rat gCAP/aCAP/Peri/VEC + human gCap/aCap/Pericyte/Arterial EC/
-Pulmonary venous EC/Systemic venous EC/abCap/VSMC only. No mouse.
+Stage 1: bidirectional SFT dataset.
 
-Fork of stage1_sft.py that additionally emits a reverse-direction example for
-every forward transition: prompt carries 'Perturbed cell:' (the same exposed
-cell instance used as the forward completion — never a separately re-sampled
-pool) and asks for the exposure conditions; completion is the perturbation
-string that produced it. This does NOT try to reconstruct the unexposed cell
-from the exposed one (ill-posed / lossy), it infers the known perturbation
-label from the expression profile. Everything else (forward pairs, common.py)
-is unchanged.
+Reads cell_split_registry_short.csv, builds cell sentences from raw counts
+(normalize_total 1e4 -> log1p -> rank -> top 800 genes; human gene names
+remapped through ALIAS_TO_CANONICAL) and writes
+sft_dataset_bidir/{train,valid,test}.jsonl with {"prompt", "completion"}.
 
-Reads cell_split_registry_short.csv, loads raw counts per source, builds
-(prompt, completion) pairs for all SFT transitions, writes:
-  sft_dataset_bidir/{train,valid,test}.jsonl  — {"prompt":..., "completion":...}
+Cell types: rat gCAP, aCAP, Peri, VEC; human gCap, aCap, Pericyte,
+Pulmonary venous EC.
 
-Cell sentences: raw counts → normalize_total(1e4) → log1p → rank desc → top-K=800.
-Completion has no leading space.
-Gene names remapped via ALIAS_TO_CANONICAL for human.
+Each forward example (source cell -> target cell) has a reverse example whose
+prompt holds the same target cell and whose completion is its age, cell type
+and condition.
 """
 from __future__ import annotations
 
@@ -52,17 +45,9 @@ UNPAIRED_PATH = PIPELINE_DIR / "unpaired_report_bidir.csv"
 
 
 def build_prompt_reverse(species: str, perturbed_cs: str) -> str:
-    """Reverse-direction prompt: given ONLY the exposed/perturbed cell's expression,
-    infer age, cell type, and the exposure conditions (perturbation) that produced
-    it — all three go in the completion, mirroring C2S-Scale's own bidirectional
-    perturbation task (paper §4.7.9: "simultaneously predicted all three labels —
-    cell type, perturbation, and exposure"). Species is stated as known context, not
-    predicted: it's the one thing that's NOT a meaningful inference target here,
-    since human/mouse gene symbols are upper-case and rat symbols are title-case in
-    our cell sentences (see load_rat_sentences) — a model could "predict" species
-    just by reading letter case, which teaches nothing. This also matches C2S-Scale's
-    own cell-type-annotation prompts, which always state species inline
-    ("...in a Homo sapiens cell...") rather than asking for it.
+    """Reverse-direction prompt: from the perturbed cell, predict its age, cell
+    type and condition, as in the C2S-Scale bidirectional perturbation task.
+    Species is given in the prompt.
     """
     return (
         f"Analyze the single cell's expression, listed in 'Perturbed cell:', from a "
@@ -259,14 +244,10 @@ def _build_pairs(
     bidirectional: bool = False,
     rev_pert_str:  str | None = None,
 ) -> list[dict]:
-    """Build forward (src→tgt) pairs; optionally also add, for every sampled
-    exposed (tgt) cell, a reverse-direction example: prompt = 'Perturbed cell:'
-    (the exposed cell, same instance used in the forward completion — never a
-    separately re-sampled pool), completion = age + cell type + condition. This
-    does NOT try to reconstruct the unexposed cell (ill-posed); it infers age/type/
-    condition from the profile. rev_pert_str overrides the forward pert_str for the
-    reverse completion's Condition field when the two must differ (see
-    REV_CONDITION_OVERRIDE); defaults to pert_str."""
+    """Forward (source -> target) pairs. With bidirectional=True, also a
+    reverse example for every target cell: prompt = the target cell, completion =
+    age, cell type and condition (rev_pert_str, default pert_str).
+    """
     rev_pert_str = pert_str if rev_pert_str is None else rev_pert_str
     src = [bc for bc in src_bcs if bc in src_sent]
     tgt = [bc for bc in tgt_bcs if bc in tgt_sent]
@@ -457,12 +438,9 @@ class SFTBuilder:
 
     @staticmethod
     def _dedup_reverse(pairs: list[dict]) -> list[dict]:
-        """Drop exact-duplicate (prompt,completion) reverse examples. The reverse
-        prompt/completion depends only on the target cell, not which source it
-        was paired with in that augmentation round, so a target cell reused
-        across multiple rounds (small-pool rat/human strata) produces
-        byte-identical reverse rows. Forward examples are untouched -- their
-        duplicate rate is already <1% (real accidental (src,tgt) collisions)."""
+        """Drop exact-duplicate reverse examples: a target cell reused in several
+        augmentation rounds gives identical reverse rows. Forward examples are kept.
+        """
         seen: set[tuple[str, str]] = set()
         out: list[dict] = []
         for ex in pairs:

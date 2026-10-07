@@ -1,28 +1,15 @@
 #!/usr/bin/env python3
 """
-build_main_figure.py — assembles the three finished panels into one main figure
-with panel letters. The caption is written beside it, not drawn on it.
+Assembles the main figure from three finished panels and writes its caption.
 
     A   human, term-born control vs BPD 7 months, gCap
     B   rat, hyperoxia vs hyperoxia + azithromycin, gCap
-    C   cameraPR over the targeted autophagy screen, all four cell types
+    C   cameraPR screen of the azithromycin prediction, four cell types
 
-It composes the PNGs the analysis scripts already wrote and recomputes nothing,
-so no number here can differ from the reports those scripts produced.
-
-WHY THE PANELS ARE PLACED IN INCHES, NOT IN GRID CELLS. The three sources share
-one typography (plot_style.FS_*), but a shared point size only survives onto the
-page if every panel is reproduced at exactly its own physical size. A gridspec
-cell stretches its image to fill the cell, which rescales the text inside it, and
-two panels stretched by different factors end up with visibly different type --
-which is exactly what happened when this was built on a gridspec. So each panel
-gets an axes rectangle equal to its native size, computed as pixels / DPI, and
-every panel is written at the same DPI (plot_style.DPI) upstream. Nothing is
-stretched, and 9.5 pt is 9.5 pt in all three.
+Panels are placed at their native size (pixels / plot_style.DPI), which keeps
+the font sizes of plot_style.
 
     python build_main_figure.py -> figures_main/main_figure.{png,pdf}
-
-The figure number is a placeholder ("Fig N") until the manuscript fixes it.
 """
 from __future__ import annotations
 
@@ -69,7 +56,7 @@ CAPTION = (
 
 
 def native_size(path: Path) -> tuple[float, float]:
-    """Panel size in inches -- what it must occupy for its text to keep its size."""
+    """Panel size in inches at plot_style.DPI."""
     if not path.exists():
         raise SystemExit(f"panel missing: {path}")
     h, w = mpimg.imread(path).shape[:2]

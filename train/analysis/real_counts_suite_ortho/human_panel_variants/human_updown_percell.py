@@ -1,34 +1,21 @@
 #!/usr/bin/env python3
 """
-human_updown_percell.py — the human figure built exactly the way the rat one
-is: per-CELL paired deltas against TRUE raw counts, using the barcodes
-recovered by recover_human_test_barcodes.py.
+Per-cell rescued-gene deltas for the human figures, on measured counts
+(barcodes from recover_human_test_barcodes.py), with the construction of
+rat_panel_variants/updown_core.py:
 
-Mirrors rat_panel_variants/updown_core.py line for line in construction:
+    delta_real  = topk(target cell) - topk(source cell)
+    delta_model = prediction (reconstructed) - topk(source cell)
 
-  delta_real  = topk(real_tgt cell)  - topk(real_src cell)   -- fully real, paired
-  delta_model = pred(reconstructed)  - topk(real_src cell)   -- model vs its OWN input cell
+PAIRING records how the source cell was chosen and is written to the report:
+"paired" for the source cell of the test example, "random_within_ct" for a
+cell drawn at random within cell type (Term baselines, set by
+build_disease_arms_trajectory.py).
 
-src/tgt are the actual cells behind each test example (human_Acute26_BPD7mo
-arm: src = real Acute26 cell, tgt = real BPD7mo cell), not population means.
-That is the whole point of the barcode recovery -- until now every human
-figure in this suite compared population averages because the pairing was
-lost when test.jsonl was written.
-
-PAIRING says whether that holds for the arm being drawn. It is "paired" above,
-but build_disease_arms_trajectory.py also drives this module for Term->disease
-arms, where no pairing exists (Term cells are absent from the pairing registry)
-and the src cell is drawn at random within cell type -- there PAIRING is
-"random_within_ct". Both the output name and a report column carry it: the two
-drivers build the same CONDITION from different baselines, and before this they
-silently overwrote each other's figures.
-
-Six violins per cell type: REAL[bg, down, up] | MODEL[bg, down, up],
-background = outside down UNION up, two panel gates (panel_sets_human).
-
-Normalization matches rank_expr_model._fit_from_matrix: log1p of CPM10k with
-the library size taken over the FULL transcriptome, then top-800 truncation
-of both real sides (pred is <=800-nonzero by construction).
+Six violins per cell type: REAL[bg, down, up] | MODEL[bg, down, up];
+background = genes outside down and up; panels from panel_sets_human.py.
+Expression is log1p(CPM10k) over the full transcriptome, then the measured
+cells are truncated to their top 800 genes.
 """
 from __future__ import annotations
 
@@ -97,10 +84,9 @@ MIN_PANEL_GENES = 3
 
 
 def load_real_counts_by_barcode(barcodes: set[str], model) -> dict[str, np.ndarray]:
-    """log1p(CPM10k) per cell, model gene axis, for the given barcodes only.
-    Chunked read of the same compiled_counts.csv load_data.load_human_bpd_raw
-    uses -- that function does not return barcodes, so the row identity is
-    kept here instead of re-deriving it."""
+    """log1p(CPM10k) per cell on the model gene axis for the given barcodes
+    (chunked read of the compiled counts CSV).
+    """
     print("  [real] chunked read of compiled_counts.csv...")
     chunks_X, chunks_bc, genes = [], [], None
     for chunk in pd.read_csv(L.C.BPD_COUNTS_PATH, index_col="id", chunksize=5000):
@@ -178,10 +164,7 @@ def draw_panel(ax, scores, title, show_legend=False):
 
 
 def legend_handles_labels():
-    """Built once and placed on the FIGURE, under the axes. Inside the axes it
-    sat on top of the left-hand violin; below the axes it cannot collide, and
-    when these panels are assembled into one main figure the per-panel legends
-    are dropped in favour of a single one."""
+    """Legend handles for the three gene subsets, placed below the axes."""
     h = [plt.Rectangle((0, 0), 1, 1, facecolor=PS.HO_COLOR, edgecolor="#333333", alpha=0.85),
          plt.Rectangle((0, 0), 1, 1, facecolor="#bbbbbb", edgecolor="#333333", alpha=0.85),
          plt.Rectangle((0, 0), 1, 1, facecolor="#bbbbbb", edgecolor="#333333", alpha=0.85, hatch="///")]

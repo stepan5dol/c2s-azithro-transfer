@@ -15,8 +15,6 @@ BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
 PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
 UBUNTU_CODENAME=noble
 LOGO=ubuntu-logo
-=== container image
-{"repo":"https://github.com/vast-ai/base-image","readme":"https://github.com/vast-ai/base-image/tree/main/external/vllm","note":"Open-source Vast image. Read this image's README at the source above, and every /etc/vast_agents/*.md, to see exactly what it adds and preinstalls.","name":"vLLM","preinstalled":"PyTorch + vLLM (OpenAI-compatible server)"}
 === CPU
 CPU(s):                                  128
 Model name:                              AMD EPYC 7513 32-Core Processor
@@ -34,7 +32,7 @@ overlay         200G   21G  180G  11% /
 === GPU
 name, driver_version, memory.total [MiB], compute_cap, pci.bus_id
 NVIDIA A100-SXM4-80GB, 580.126.09, 81920 MiB, 8.0, 00000000:01:00.0
-=== CUDA (vast-capabilities)
+=== CUDA
 {
   "driver_version": "580.126.09",
   "components": {
@@ -59,12 +57,10 @@ NVIDIA A100-SXM4-80GB, 580.126.09, 81920 MiB, 8.0, 00000000:01:00.0
     "enabled": false,
     "path": "/usr/local/cuda/compat",
     "compat_driver_version": "580.95.05",
-    "host_driver_version": "580.126.09",
-    "note": "CUDA forward-compatibility libs. They let a NEWER CUDA MAJOR version run on an OLDER host driver, on datacenter (Volta+) GPUs only. This image auto-enables them at boot (via ldconfig) when needed and leaves them off otherwise — `enabled` is the current state. You normally never toggle this by hand; do NOT force them on when the host driver is new enough (set DISABLE_FORWARD_COMPAT=true at launch to opt out). For same-major mismatches (e.g. CUDA 12.x app on a 12.y driver) no compat libs are needed at all — see minor-version compatibility in the cuda note."
+    "host_driver_version": "580.126.09"
   },
   "driver_max_cuda": "13.0",
-  "compute_capability": "8.0",
-  "note": "CUDA compute works via the host-injected driver. A PARTIAL CUDA 13.0 install is present (components: nvcc, dev_headers, cudart, nvrtc, cublas, curand); this is NOT a full toolkit, so check the `components` map before assuming a library exists — missing ones (e.g. cuBLAS/cuDNN) must be added from the configured nvidia apt repo (cuda-<lib>-X-Y / libcudnn*) or come bundled with framework wheels. COMPATIBILITY (agents get this wrong): the toolkit/wheel does NOT need to match the driver's exact CUDA version. CUDA minor-version compatibility means any CUDA 12.x build runs on any driver that supports CUDA 12.0+ (and 13.x on a 13.0+ driver) — so a 12.x wheel is fine here as long as driver_max_cuda is >= 12.0; do NOT 'upgrade the driver to match CUDA'. CAVEAT: this excludes PTX JIT — code shipped as PTX from a toolkit NEWER than the host driver fails with CUDA_ERROR_UNSUPPORTED_PTX_VERSION (222) since the driver owns the JIT (only bites when the host driver is older than the build; use native-cubin builds or forward compat). Forward compatibility (running a newer CUDA MAJOR on an older driver) is the separate cuda-compat mechanism, auto-managed at boot (see forward_compat). What DOES bind is the GPU architecture: compute_capability >= 10.0 (Blackwell) needs CUDA >= 12.8 wheels — an older build (e.g. torch cu124) installs cleanly but fails at runtime with 'no kernel image is available'. When installing CUDA libs: NEVER install the NVIDIA driver from apt (it must match the host — avoid the 'cuda' metapackage and nvidia-driver-*/libcuda* packages); install only components <= driver_max_cuda, and prefer framework wheels that bundle their own CUDA runtime. See AGENTS.md."
+  "compute_capability": "8.0"
 }
 === nvcc
 Cuda compilation tools, release 13.0, V13.0.88

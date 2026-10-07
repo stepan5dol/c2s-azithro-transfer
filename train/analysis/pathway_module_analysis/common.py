@@ -1,24 +1,7 @@
 """
-Shared paths, constants, and helper functions for the cross-species
-(rat HO/RA vs human disease/control) pathway-module comparison.
-
-Design decisions carried over from the conversation that produced this:
-  - Effect sizes (Cohen's d), not p-values: both rat (n=1 animal/condition)
-    and the human BPD-PH cohort (n=1-2 samples/condition) lack biological
-    replication, so per-cell tests (Wilcoxon etc.) are pseudoreplicated --
-    FDR/p-values from them don't mean what they normally mean. See
-    memory/rat_rescue_gene_pipeline.md and the conversation for the full
-    argument.
-  - AUCell/ULM (via decoupler) instead of raw log2FC + GSEA: rank-based
-    scoring is far less sensitive to sequencing-depth differences between
-    groups, which is a real, confirmed confound here (rat disease has HIGHER
-    depth than control; human disease has LOWER depth than control -- see
-    diagnose_depth.py).
-  - Ribosomal/mitochondrial/hemoglobin genes stripped from the scoring
-    matrix (not just excluded from gene sets) before scoring, since they
-    dominate the composition and are highly depth-sensitive.
-  - Pathways collapsed into modules by Jaccard gene-overlap (>=0.5) BEFORE
-    scoring, not after, to avoid ~100 collinear numbers.
+Shared paths, constants and helpers for the rat and human data loaders.
+Ribosomal, mitochondrial and haemoglobin genes are matched by
+STRIP_PATTERN_RAT / STRIP_PATTERN_HUMAN.
 """
 from pathlib import Path
 import re

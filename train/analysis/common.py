@@ -1,12 +1,6 @@
 """
-common.py — shared loading + statistical primitives for the abs-expr test
-suite (METRICS_CATALOG.md, rerun on calibrated absolute reconstructed
-expression instead of rank/rank-score representations).
-
-Every test script in this folder imports this module and rank_expr_model.py;
-nothing here is copied from the old rank-based scripts (dropout_vs_rankshift_
-check.py, delta_profile_analysis.py, etc.) -- only the H0/statistic each test
-is supposed to compute, as described in METRICS_CATALOG.md, was carried over.
+Shared loaders and statistical primitives for the rat analyses on
+reconstructed expression (rank_expr_model.py).
 """
 from __future__ import annotations
 
@@ -73,11 +67,10 @@ def dedupe_first(genes: list[str]) -> list[str]:
 
 
 def load_cells(jsonl_path: Path) -> dict[tuple[str, str], list[dict]]:
-    """
-    -> {(cell_type, condition): [{"unexposed":[...], "gt":[...], "pred":[...]}]}
-    gene lists are rank-ordered gene-symbol lists (top-K), straight from the
-    fwd-direction inference records (prompt carries 'Unexposed:', 'gt'/'pred'
-    are the perturbed-cell sentences).
+    """-> {(cell_type, condition): [{"unexposed": [...], "gt": [...], "pred": [...]}]}
+    Rank-ordered top-K gene lists from the forward inference records: the
+    baseline cell from the prompt's "Unexposed:" field, the measured and the
+    predicted perturbed cell.
     """
     groups: dict[tuple[str, str], list[dict]] = defaultdict(list)
     with open(jsonl_path) as f:
@@ -117,17 +110,10 @@ DGE_XLSX = {
 
 
 def load_celltype_rescue_genes(max_p_ho: float = 0.05, min_p_azi: float = 0.05) -> dict[str, set[str]]:
-    """-> {cell_type: {gene, ...}}, one independently-derived set per cell type.
+    """-> {cell_type: {gene, ...}} from the per-cell-type rescue workbooks.
 
-    Filter (classic "rescue" definition): recovery_type == 'Rescued_HO_down'
-    (gene down-regulated by hyperoxia in THIS cell type's own DGE) AND
-    p_val_adj_HO < max_p_ho (the HO knock-down is itself statistically real)
-    AND p_val_adj_AZI >= min_p_azi (after AZI, the gene is no longer
-    significantly different from baseline -- i.e. successfully normalized,
-    not just "somewhat higher than HO"). This is stricter than gating on
-    p_val_adj_HO alone: it requires an actual rescue, not just a real injury
-    effect. recovery_ratio (not filtered on, but present in the source xlsx)
-    is the continuous magnitude-of-rescue score for genes passing this gate.
+    Keeps genes with recovery_type == 'Rescued_HO_down', p_val_adj_HO < max_p_ho
+    and p_val_adj_AZI >= min_p_azi (or missing).
     """
     import openpyxl
     out = {}
@@ -251,9 +237,7 @@ def fit_pca_shared(gt_X: np.ndarray, pred_X: np.ndarray, n_components: int = 30,
 
 
 def fit_pca_pooled(X_a: np.ndarray, X_b: np.ndarray, n_components: int = 30, seed: int = SEED):
-    """For within-gt (or within-pred) group-vs-group comparisons (e.g. HO vs
-    AZI) where neither side is a privileged 'reference' -- fit PCA on the
-    pooled data instead of GT-fit/other-project."""
+    """PCA fitted on the pooled cells of two groups, for comparisons without a reference group."""
     from sklearn.decomposition import PCA
     pooled = np.vstack([X_a, X_b])
     n_comp = max(2, min(n_components, len(pooled) - 1, pooled.shape[1]))
@@ -263,9 +247,9 @@ def fit_pca_pooled(X_a: np.ndarray, X_b: np.ndarray, n_components: int = 30, see
 
 def forest_plot(ax, labels: list[str], values: list[float], los: list[float], his: list[float],
                  filled: list[bool] | None = None, ref: float = 0.0, xlabel: str = "", logx: bool = False):
-    """Standard forest plot: one row per label, marker at `values[i]`, error
-    bar [los[i], his[i]], vertical reference line at `ref`. filled[i]=False
-    draws a hollow marker (convention used throughout: gt=filled, pred=hollow)."""
+    """Forest plot: one row per label, marker at values[i], error bar
+    [los[i], his[i]], reference line at ref; filled[i]=False draws a hollow marker.
+    """
     y = np.arange(len(labels))[::-1]
     filled = filled if filled is not None else [True] * len(labels)
     for i, (v, lo, hi, f) in enumerate(zip(values, los, his, filled)):
@@ -283,13 +267,12 @@ def forest_plot(ax, labels: list[str], values: list[float], los: list[float], hi
 
 
 def knn_mixing_lisi(gt_emb: np.ndarray, pred_emb: np.ndarray, k: int = 30) -> np.ndarray:
-    """Simplified (hard k-NN, not perplexity-weighted) integration LISI
-    (Korsunsky et al. 2019): for each point, inverse Simpson index of the
-    gt/pred label composition among its k nearest neighbours in the pooled
-    embedding. 1.0 = neighbours all one label (segregated); 2.0 = perfectly
-    even gt/pred mix (well-integrated -> pred indistinguishable from gt
-    locally). Returns per-point LISI for the PRED points only (what we care
-    about: do pred cells sit inside real neighbourhoods)."""
+    """Simplified integration LISI (Korsunsky et al. 2019) with hard k-NN
+    instead of perplexity weighting: inverse Simpson index of the gt/pred label
+    composition among each point's k nearest neighbours in the pooled embedding.
+    1.0 = all neighbours share one label, 2.0 = even mix. Returned for the pred
+    points only.
+    """
     from sklearn.neighbors import NearestNeighbors
     pooled = np.vstack([gt_emb, pred_emb])
     labels = np.array([0] * len(gt_emb) + [1] * len(pred_emb))
@@ -306,34 +289,28 @@ def knn_mixing_lisi(gt_emb: np.ndarray, pred_emb: np.ndarray, k: int = 30) -> np
 
 
 def delta_and_mask(unexp_X: np.ndarray, other_X: np.ndarray):
-    """delta = other - unexposed (abs expr units); mask = genes 'in play' for
-    that cell (nonzero in EITHER side) -- restricts comparisons to genes the
-    reconstruction actually placed in one of the two top-K lists, instead of
-    diluting every statistic with tens of thousands of structural zero-vs-zero
-    pairs coming from the K=800 cutoff."""
+    """delta = other - unexposed (expression units); mask = genes nonzero on
+    either side, which leaves out genes that are zero on both sides because of
+    the K=800 cutoff.
+    """
     delta = other_X - unexp_X
     mask = (unexp_X > 0) | (other_X > 0)
     return delta, mask
 
 
 def filtered_gene_domain(X_a: np.ndarray, X_b: np.ndarray, min_frac: float = 0.2) -> np.ndarray:
-    """Boolean gene mask: nonzero in >=min_frac of cells on at least one side.
-    Without this, centroid/PERMDISP-type statistics over the full ~18k-gene
-    vocabulary are dominated by tens of thousands of structural zero-padding
-    dimensions (genes never reconstructed for that group) that contribute pure
-    high-dimensional noise and bias norm-based bootstrap CIs upward."""
+    """Boolean gene mask: nonzero in >= min_frac of cells on at least one
+    side. Removes genes that are zero in nearly all cells of both groups.
+    """
     frac_a = (X_a != 0).mean(axis=0)
     frac_b = (X_b != 0).mean(axis=0)
     return (frac_a >= min_frac) | (frac_b >= min_frac)
 
 
 def intersected_gene_domain(X_a: np.ndarray, X_b: np.ndarray, min_frac: float = 0.2) -> np.ndarray:
-    """Symmetric (AND) counterpart to filtered_gene_domain's OR: gene must be
-    nonzero in >=min_frac of cells on BOTH sides. Used where the union domain
-    (filtered_gene_domain) is suspected of inflating apparent gt/pred
-    divergence with genes only one side ever reconstructs (e.g. F4's
-    var_r^2/PERMDISP re-audit) -- intersection restricts to genes both sides
-    actually place mass on, a stricter and smaller domain."""
+    """Boolean gene mask: nonzero in >= min_frac of cells on both sides (the
+    intersection counterpart of filtered_gene_domain).
+    """
     frac_a = (X_a != 0).mean(axis=0)
     frac_b = (X_b != 0).mean(axis=0)
     return (frac_a >= min_frac) & (frac_b >= min_frac)

@@ -1,29 +1,11 @@
 #!/usr/bin/env python3
 """
-pipeline_short/stage2_azi_inference_ratmatch.py — AZI counterfactual inference builder (rat-matched prompt variant).
+Stage 2, rat wording: as stage2_azi_inference.py, with AZI_PERTURBATION set
+to the rat training string PERTURBATION_STR[("rat", "HO", "AZI")]:
+"Azithromycin treatment (30 mg/kg IP at P7, P10, P13) during exposure to 85%
+O2 for 14 days."
 
-Same as stage2_azi_inference.py, but AZI_PERTURBATION is the literal, verbatim
-rat perturbation string the model saw during rat SFT training
-(PERTURBATION_STR[("rat", "HO", "AZI")] in common.py):
-  "Azithromycin treatment (30 mg/kg IP at P7, P10, P13) during after exposure
-  to 85% O2 for 14 days."
-No rewording for human dose/route/duration/condition — the point is to test
-whether the model transfers the AZI signal when given the exact same
-perturbation text it was trained on for rat, unchanged.
-
-Human clinical translation: for every held-out (test + valid) BPD-source cell
-in Acute26 / BPD7mo / BPDPH7mo, build a prompt asking the model to predict the
-cell's expression under azithromycin treatment (AZI_PERTURBATION). There
-is no ground truth for this counterfactual (azithromycin was never given to
-these patients), so rows are prompt-only — no "completion" field.
-
-Strictly split=="test" or split=="valid" barcodes from cell_split_registry_short.csv
-(never train — checked below). Scope matches TARGET_HUMAN_CELL_TYPES (gCap,
-aCap, Pulmonary venous EC, Pericyte), the scope shared with SFT.
-
-Writes a single combined file:
-  pipeline_short/inference_azi_ratmatch.jsonl
-Each line: {"prompt": ..., "condition": ..., "cell_type": ..., "split": ..., "barcode": ...}
+Output: pipeline_short/inference_azi_ratmatch.jsonl
 """
 from __future__ import annotations
 

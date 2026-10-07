@@ -1,31 +1,16 @@
 #!/usr/bin/env python3
 """
-panel_sets.py — panel loader for rat_panel_variants/, replacing
-common.load_celltype_rescue_genes() with a version that (a) keeps
-Rescued_HO_up and Rescued_HO_down as SEPARATE sets instead of returning
-only "down", and (b) makes the p-value filtering optional.
+Rescued-gene panels for the rat figures.
 
-Source is unchanged: the same four full rescue-gene workbooks
-common.DGE_XLSX points at (gcap / acap / pericyte / Venous), Sheet1, header
-  gene, avg_log2FC_HO, p_val_adj_HO, avg_log2FC_AZI, p_val_adj_AZI,
-  recovery_ratio, recovery_type
+Reads the per-cell-type rescue workbooks (common.DGE_XLSX, Sheet1; columns
+gene, avg_log2FC_HO, p_val_adj_HO, avg_log2FC_AZI, p_val_adj_AZI,
+recovery_ratio, recovery_type) and returns Rescued_HO_down and Rescued_HO_up
+as separate gene sets.
 
-Two variants:
-  "full_list"  every row of the workbook, split by recovery_type only --
-               no p-value filtering at all
-  "gated"      recovery_type AND p_val_adj_HO < 0.05
-               AND (p_val_adj_AZI is None OR >= 0.05)
-
-"gated" is exactly what common.load_celltype_rescue_genes() applies and what
-every existing rat rescue figure uses. Its second condition selects genes by
-the REAL AZI outcome ("after AZI no longer significantly different from
-baseline"), so in the AZI arm the REAL violin is guaranteed to show rescue by
-construction -- the genes were chosen for it. "full_list" drops that.
-
-Caveat that applies to BOTH variants: the workbooks are themselves a
-pre-selected list (357-540 rows out of a ~18-20k transcriptome, every row
-already carrying a recovery_type), built upstream by rescue_gene_pipeline.py.
-"full_list" is less conditioned on the AZI outcome, not unconditioned.
+Gates:
+  full_list  all rows, split by recovery_type
+  gated      additionally p_val_adj_HO < 0.05 and p_val_adj_AZI >= 0.05
+             (or missing), as in common.load_celltype_rescue_genes()
 """
 from __future__ import annotations
 
@@ -43,7 +28,7 @@ RECOVERY_TYPES = ("Rescued_HO_down", "Rescued_HO_up")
 
 GATE_DESC = {
     "full_list": "all genes of the list, split by recovery_type, no p-value filter",
-    "gated": "p_val_adj_HO<0.05 AND p_val_adj_AZI>=0.05 (the panel used by every existing figure)",
+    "gated": "p_val_adj_HO<0.05 AND p_val_adj_AZI>=0.05",
 }
 
 EXPECTED = {

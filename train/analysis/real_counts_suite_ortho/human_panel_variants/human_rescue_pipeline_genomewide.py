@@ -1,60 +1,25 @@
 #!/usr/bin/env python3
 """
-human_rescue_pipeline_genomewide.py — genome-wide human rescue table, the
-missing piece for building human panels the way the rat ones are built.
+Genome-wide rescue table for the human cohorts, with the formulas of the rat
+tables (Seurat log2FC, Mann-Whitney U with Bonferroni correction,
+recovery_ratio, recovery_type).
 
-WHY THIS EXISTS
-pathway_module_analysis/human_rescue_gene_pipeline.py already ports rat's
-scripts/rescue_gene_pipeline.py faithfully -- it computes BOTH arms and BOTH
-p-values (Mann-Whitney + Bonferroni, same as rat's wilcoxon_padj), plus
-recovery_ratio / recovery_type with rat's constants. What it does NOT do is
-run over all genes: it is a per-gene lookup tool (`main(genes)`, default
-FOXF1), because it reads the real side through load_data.load_human_bpd_raw,
-whose gene axis (remap_gene_names-canonicalized) differs from the AZI-pred
-matrix's axis (model.gene_to_idx, raw CSV column names), and reconciling the
-two for the full panel was out of scope there.
+Arms, per condition and cell type, on the model gene axis:
+  control  measured Term0d + Term20d
+  disease  measured Acute26 / BPD7mo / BPDPH7mo
+  azi      model azithromycin prediction (reconstructed, at most 800 genes)
 
-That blocker does not exist here: pathway_module_analysis/real_counts.py's
-loaders take `model` and already reindex the real matrices onto the model's
-gene axis (_reindex_to_model_genes), which is the convention the whole
-real_counts_suite uses. So all three matrices share one axis and the sweep is
-just vectorized arithmetic.
+log2FC and p-values are computed with all arms truncated to their top 800
+genes, so that recovery_ratio = |log2FC_azi| / |log2FC_disease| compares
+quantities on the same gene budget; min.pct is computed on the untruncated
+measured matrices. The disease arm is also reported untruncated
+(*_disease_full columns).
 
-ARMS
-  control  real Term0d+Term20d pooled    (real counts)
-  disease  real BPD7mo                   (real counts)
-  azi      model AZI-counterfactual pred (reconstructed; <=800 nonzero by
-                                          construction, no real human patient
-                                          ever received AZI)
+GSE275938 has 1 Acute26, 2 BPD7mo, 2 BPDPH7mo, 1 Term0d and 1 Term20d donor;
+the per-cell tests do not account for donor.
 
-GENE BUDGET -- the one place this deliberately departs from rat
-rat's pipeline has all three arms real and runs on the FULL transcriptome;
-top-800 never appears there. Here the AZI arm cannot leave the K=800 budget,
-and recovery_ratio = |log2FC_azi| / |log2FC_disease| divides one arm by the
-other -- so a full-transcriptome denominator under a top-800 numerator would
-make the ratio, and the recovery_ratio<0.9 gate on it, meaningless. Hence:
-
-  log2FC and p  ->  computed with ALL sides top-800-truncated (both contrasts)
-  min.pct       ->  computed on the FULL untruncated real matrices
-
-The min.pct split is intentional. After truncation "detected" means "made it
-into this cell's own top 800", not "expressed", so MIN_PCT on truncated data
-is a different and much harsher filter. min.pct is an eligibility filter, not
-a measurement, so it stays on full data (as in rat); the measurements live in
-the matched budget.
-
-The disease arm is ALSO reported untruncated (`*_disease_full` columns) --
-that is the direct analogue of rat's avg_log2FC_HO / p_val_adj_HO and shows
-what the truncation costs. It is not what feeds recovery_ratio.
-
-CAVEAT carried over from human_rescue_gene_pipeline.py's docstring (lines
-38-47): GSE275938 has 1 Acute26 / 2 BPD7mo / 2 BPDPH7mo / 1 Term0d / 1
-Term20d patient. Per-cell Mann-Whitney across these groups is
-pseudoreplicated -- condition confounds with patient. These p-values exist so
-the human and rat tables are formula-identical, not because they carry the
-usual inferential meaning.
-
-Only T=1.0 / inference_azi_results.jsonl (see real_counts_suite/README.md).
+Output: reports/human_rescue_genomewide.csv,
+reports/human_rescue_genomewide_summary.csv.
 """
 from __future__ import annotations
 
@@ -92,18 +57,14 @@ MIN_AZI_CELLS = 3
 
 
 def seurat_log2fc(x1: np.ndarray, x2: np.ndarray) -> np.ndarray:
-    """log2(mean(expm1(x1))+1) - log2(mean(expm1(x2))+1), per gene (axis 0).
-    Same formula as scripts/rescue_gene_pipeline.py::seurat_log2fc."""
+    """log2(mean(expm1(x1)) + 1) - log2(mean(expm1(x2)) + 1) per gene (axis 0)."""
     return np.log2(np.expm1(x1).mean(axis=0) + 1) - np.log2(np.expm1(x2).mean(axis=0) + 1)
 
 
 def mwu_padj(x1: np.ndarray, x2: np.ndarray, n_genes_total: int) -> np.ndarray:
-    """Two-sided Mann-Whitney U per gene, Bonferroni-adjusted by total gene
-    count -- rat's wilcoxon_padj, vectorized over the gene axis.
-
-    Genes constant in both groups give an undefined U statistic (all ties);
-    scipy returns NaN there. Those carry no evidence of a difference, so they
-    are set to p=1 rather than propagated as NaN into the gate."""
+    """Two-sided Mann-Whitney U per gene, Bonferroni-adjusted by the total
+    gene count. Genes constant in both groups (p = NaN) get p = 1.
+    """
     p = stats.mannwhitneyu(x1, x2, alternative="two-sided", axis=0).pvalue
     p = np.where(np.isnan(p), 1.0, p)
     return np.minimum(p * n_genes_total, 1.0)

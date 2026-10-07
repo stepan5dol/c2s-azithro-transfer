@@ -1,10 +1,6 @@
 """
-plot_style.py — shared publication style for figures/figures_beautiful/*.
-
-One place to fix fonts, dpi, and the color vocabulary so every "beautiful"
-figure in this folder reads as one consistent system instead of N one-off
-matplotlib defaults. Import and call apply() once at the top of each
-*_beautiful.py script, before creating any figure.
+Shared figure style: fonts, resolution, colours and significance brackets.
+Call apply() before creating a figure.
 """
 from __future__ import annotations
 
@@ -81,12 +77,7 @@ SIG_ALPHA = 0.05
 
 
 def sig_label(p: float) -> str:
-    """The printed p-value. Stars and "ns" are deliberately not used: a reader
-    comparing two arms of a figure otherwise compares star counts, which are a
-    function of n as much as of effect size -- and the two arms here differ in
-    n by an order of magnitude (see the power curve in autophagy_panel/reports/
-    rat_topk_detectability_gcap_up_power_curve.csv). The number is printed
-    always; significance is carried by weight, not by a separate token."""
+    """p-value label for a significance bracket, printed as a number."""
     if p < 1e-3:
         return f"p={p:.1e}"
     return f"p={p:.3f}"

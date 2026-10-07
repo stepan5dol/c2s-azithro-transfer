@@ -1,40 +1,16 @@
 #!/usr/bin/env python3
 """
-limma_sets.py — limma's camera and fry on the BPD7mo disease arm, per cell
-type, called through rpy2. Nothing is reimplemented: these are the reference
-implementations from limma (Wu & Smyth, NAR 2012 for camera; Giner & Smyth
-2016 for fry).
+limma camera, cameraPR and fry over the library terms exported by
+export_for_limma.py, per cell type and arm, through rpy2 (camera: Wu & Smyth,
+NAR 2012; fry: Giner & Smyth, 2016).
 
-WHY, GIVEN THE SUITE ALREADY HAS GSEA. Both GSEA prerank and the per-gene
-Mann-Whitney used elsewhere here treat genes as independent. Genes inside a
-pathway are correlated, so both are anticonservative by an amount neither
-reports. camera asks the same competitive question -- "is this set shifted
-more than the rest of the transcriptome" -- with the variance inflated by the
-inter-gene correlation estimated from the data:
+    camera    competitive; inter-gene correlation estimated per set
+              (inter.gene.cor = NA) and fixed at 0.01
+    cameraPR  competitive, on log2FC ranks, inter-gene correlation 0.01
+    fry       self-contained; PValue.Mixed tests change in either direction
 
-    VIF = 1 + (m - 1) * rho
-
-Two runs: rho ESTIMATED per set from the residual space of the same design
-(`inter.gene.cor=NA` -- camera's default is the FIXED 0.01, not estimation),
-and rho at that fixed 0.01, because the whole correction rides on this one
-number and the gap between the two runs should be visible.
-
-WHAT EACH STATISTIC ANSWERS, given a pathway holds genes moving both ways:
-
-    camera            competitive, directional. Fixes the correlation problem,
-                      NOT the mixing one -- it still nets a bidirectional set.
-    fry PValue        self-contained, directional.
-    fry PValue.Mixed  self-contained, UNDIRECTED: is the set moved at all, in
-                      either direction. The one standard statistic that does
-                      not cancel on a set holding both directions.
-
-READ fry's p-values WITH THE COLUMN COUNT IN HAND. fry is self-contained, so
-its p-value falls with the number of columns, and the columns here are 600 to
-2600 cells. It will call nearly everything significant; that is the column
-count talking, not the biology. Its useful output is the RANKING of Mixed
-p-values across terms, not whether they clear a threshold. camera, being
-competitive, is the one that stays interpretable at this n -- which is why
-both are run.
+In the azi arm each term is split into the members lowered (@@dn) and raised
+(@@up) by disease (|log2FC_disease| > 0.25).
 
     python export_for_limma.py && python limma_sets.py
         -> autophagy_program/reports/bpd7mo_limma_sets.csv

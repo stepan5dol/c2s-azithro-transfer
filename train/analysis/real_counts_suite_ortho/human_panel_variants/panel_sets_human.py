@@ -1,36 +1,18 @@
 #!/usr/bin/env python3
 """
-panel_sets_human.py — human counterpart of rat_panel_variants/panel_sets.py.
+Rescued-gene panels for the human figures, read from the workbooks written by
+filter_to_rat_schema.py
+(reports/rat_schema/human_{condition}_{ct}_rescue_predicted_azi.xlsx, rat
+column layout). The AZI columns hold the model's prediction.
 
-Reads the human rescue workbooks this folder produces
-(reports/rat_schema/human_{condition}_{ct}_rescue_predicted_azi.xlsx, same
-seven-column rat schema) and returns Rescued_HO_down / Rescued_HO_up as
-separate sets, with the gate as a parameter.
+Gates, as for rat (rat_panel_variants/panel_sets.py):
+  full_list  all rows, split by recovery_type
+  gated      additionally p_val_adj_HO < 0.05 and p_val_adj_AZI >= 0.05
+             (or missing)
 
-The `_rescue_predicted_azi` suffix is load-bearing: the AZI column in these
-workbooks is the MODEL's prediction, not a real arm, because no human patient
-received azithromycin. Older `_rescue_gene.xlsx` files from an earlier run of
-filter_to_rat_schema.py are NOT read here -- if any are still sitting in
-reports/rat_schema/, they are stale.
-
-Two variants, matching the rat side one-for-one:
-  "full_list"  every row of the workbook, split by recovery_type only
-  "gated"      recovery_type AND p_val_adj_HO < 0.05
-               AND (p_val_adj_AZI is NaN OR >= 0.05)
-
-Column semantics here (set by human_rescue_pipeline_genomewide.py):
-  p_val_adj_HO   Term0_20 -> BPD7mo, both real          "disease changed it"
-  p_val_adj_AZI  Term0_20 -> model AZI-pred             "after AZI it is back
-                                                         at the control level"
-Note the AZI contrast is against the CONTROL (Term0_20), not against BPD7mo
--- that is rat's construction (p_val_adj_AZI there is HO+AZI vs RA, not vs
-HO), and >= 0.05 therefore means "normalized", not "AZI did nothing".
-
-Caveat inherited from the workbook: every row already passed rat's
-recovery_ratio<0.9 gate, so "full_list" is the rescued set, not the whole
-transcriptome -- exactly as on the rat side, where the xlsx is also
-post-gate. The genome-wide table (reports/human_rescue_genomewide.csv) is
-the unfiltered source if a wider universe is ever needed.
+Columns (human_rescue_pipeline_genomewide.py):
+  p_val_adj_HO   Term control vs disease, both measured
+  p_val_adj_AZI  Term control vs azithromycin prediction
 """
 from __future__ import annotations
 
@@ -49,7 +31,7 @@ RECOVERY_TYPES = ("Rescued_HO_down", "Rescued_HO_up")
 
 GATE_DESC = {
     "full_list": "all genes of the workbook, split by recovery_type, no p-value filter",
-    "gated": "p_val_adj_HO<0.05 (Term->BPD) AND p_val_adj_AZI>=0.05 (AZI back at Term level)",
+    "gated": "p_val_adj_HO<0.05 AND p_val_adj_AZI>=0.05",
 }
 
 EXPECTED = {

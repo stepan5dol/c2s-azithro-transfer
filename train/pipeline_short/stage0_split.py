@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """
-pipeline/stage0_split.py — Data Audit + CellSplitRegistry
+Stage 0: data audit and cell split registry.
 
-Phase 0a: obs-only audit — counts per source×condition×cell_type
-Phase 0b: barcode-level train/valid/test split, deterministic per stratum
+  0a  cell counts per source x condition x cell type
+  0b  barcode-level train/valid/test split, seeded per stratum
 
-Sanity checks [S0-1..S0-6] run before writing output.
-Halts on blocking failures; prints WARNs for non-blocking issues.
-Idempotent: if registry already exists, only sanity checks are re-run.
+Sanity checks S0-1..S0-6 run before the registry is written. If the registry
+already exists, only the checks are run.
 """
 
 from __future__ import annotations

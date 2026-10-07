@@ -1,19 +1,10 @@
 #!/usr/bin/env python3
 """
-A8 equivalence, real-counts version: is model-pred-to-real-cell distance
-within the envelope of real-cell-to-real-cell variability? Same TOST-like
-ECDF construction as abs_analysis/a8_equivalence_beautiful_species.py, but
-"gt" (real side) is now TRUE raw counts (via recovered barcodes,
-recover_rat_test_barcodes.py), top-800-truncated to match pred's forced
-K=800 budget -- not reconstructed from a rank list like the original.
-
-For each condition (RA, HO, AZI): pool all real cells that appear as that
-condition's src or tgt across both recovered transitions (RA->HO, HO->AZI),
-deduplicated by barcode. gt_gt = pairwise real-real distances within that
-condition's pool. cross = distance from model's pred (predicting that
-condition from the other) to the same real pool.
-
-Only T=1.0 / test_inference_results3.jsonl (see real_counts_suite/README.md).
+Equivalence of predicted cells to measured cell-to-cell variability, rat, on
+measured counts. For each transition (RA -> HO, HO -> AZI) and cell type:
+real-real pairwise distances within the measured target cells (top-800
+truncated; barcodes from recover_rat_test_barcodes.py) and distances from the
+model's predictions to the same cells.
 """
 from __future__ import annotations
 
@@ -85,9 +76,6 @@ def main():
             r = json.loads(line)
             pred_by_idx[r["idx"]] = r["pred"].strip().split()
 
-    # condition pool: real barcodes seen as src or tgt for a given condition,
-    # across BOTH transitions (RA appears as src of rat_RA_HO; HO appears as
-    # tgt of rat_RA_HO AND src of rat_HO_AZI; AZI appears as tgt of rat_HO_AZI)
     cond_pool = {"RA": ("rat_RA_HO", "src_barcode"), "HO": None, "AZI": ("rat_HO_AZI", "tgt_barcode")}
 
     PS.apply()
@@ -104,7 +92,6 @@ def main():
             ct_sub = sub[sub["ct"] == ct]
             if len(ct_sub) < C.MIN_N:
                 continue
-            # real pool for the TARGET condition of this transition (HO for RA->HO, AZI for HO->AZI)
             real_pool_bcs = pd.unique(ct_sub["tgt_barcode"])
             real_pool_X = np.stack([real_by_bc[bc] for bc in real_pool_bcs])
             real_pool_X = CR.truncate_topk(real_pool_X)

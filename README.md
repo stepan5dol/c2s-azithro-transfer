@@ -16,8 +16,6 @@ Datasets: rat lung GSE300670 (room air, hyperoxia, hyperoxia + azithromycin), hu
 | Fine-tuning | axolotl with `training/axolotl_sft_pythia1b_A100_used.yaml` | checkpoint-264 (best validation loss 2.199) |
 | Generation | `pod/run_test.py` and `pod/run_azi.py` (vLLM 0.30.0) | `test_inference_results_t10.jsonl` (test set, temperature 1.0; also t08 and t12), `inference_azi_results.jsonl` |
 
-The header comment of the yaml predates the final dataset (13,886 / 60 / 892 examples); the run used 14,520 / 102 / 1,566.
-
 ## Analysis
 
 `ANALYSIS` stands for `train/analysis` and `ortho` for `ANALYSIS/real_counts_suite_ortho`.

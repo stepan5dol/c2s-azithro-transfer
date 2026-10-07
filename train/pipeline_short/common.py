@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""pipeline/common.py — shared constants and utilities for all pipeline stages."""
+"""Shared constants and utilities for the pipeline stages."""
 
 from __future__ import annotations
 

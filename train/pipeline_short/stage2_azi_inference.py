@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
 """
-pipeline_short/stage2_azi_inference.py — AZI counterfactual inference builder.
+Stage 2: azithromycin prompts for the human cells.
 
-Human clinical translation: for every held-out (test + valid) BPD-source cell
-in Acute26 / BPD7mo / BPDPH7mo, build a prompt asking the model to predict the
-cell's expression under oral azithromycin treatment (AZI_PERTURBATION). There
-is no ground truth for this counterfactual (azithromycin was never given to
-these patients), so rows are prompt-only — no "completion" field.
+For every held-out (test and valid) BPD-source cell of Acute26, BPD7mo and
+BPDPH7mo in TARGET_HUMAN_CELL_TYPES, builds a prompt for the cell's expression
+under oral azithromycin (AZI_PERTURBATION). There is no ground truth, so rows
+have no completion. Training barcodes are excluded and checked.
 
-Strictly split=="test" or split=="valid" barcodes from cell_split_registry_short.csv
-(never train — checked below). Scope matches TARGET_HUMAN_CELL_TYPES (gCap,
-aCap, Pulmonary venous EC, Pericyte), the scope shared with SFT.
-
-Writes a single combined file:
-  pipeline_short/inference_azi.jsonl
-Each line: {"prompt": ..., "condition": ..., "cell_type": ..., "split": ..., "barcode": ...}
+Output: pipeline_short/inference_azi.jsonl, one line per cell:
+{"prompt", "condition", "cell_type", "split", "barcode"}
 """
 from __future__ import annotations
 

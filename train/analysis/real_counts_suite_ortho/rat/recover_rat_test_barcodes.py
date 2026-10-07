@@ -1,33 +1,17 @@
 #!/usr/bin/env python3
 """
-recover_rat_test_barcodes.py — reconstruct which real rat barcodes back each
-fwd example in the TEST split, for BOTH transitions (RA->HO injury arm and
-HO->AZI rescue arm), so downstream tests can pull TRUE raw counts
-(rat.ho.azi.integrated.h5ad) instead of reconstructing unexposed/gt through
-the lossy rank->expression model.
+Recovers the measured rat barcodes behind each forward test example of both
+transitions (RA -> HO, HO -> AZI).
 
-Extended from the original real_pair_recovery/recover_rat_test_barcodes.py
-(which only exposed the HO_AZI arm) -- the underlying pairing replay already
-builds RA_HO pairs internally (S1._rat_pairs iterates BOTH ("RA","HO") and
-("HO","AZI")), this version just also keeps and verifies that arm.
+stage1_sft_bidir.py samples source and target barcodes with a seeded RNG
+(_pair_seed = MD5(split|pair_type|cell_type) + RANDOM_SEED) and writes only
+prompt and completion. This script replays the same pairing keeping the
+barcodes. The position in the replayed list is the idx of
+test_inference_results_t10.jsonl, and each row is verified by exact match of
+the completion with the "gt" field.
 
-Why this is possible at all: pipeline_short/stage1_sft_bidir.py's _build_pairs
-samples src/tgt barcodes via a seeded RNG (_pair_seed = MD5(split|pair_type|
-cell_type) + RANDOM_SEED) -- fully deterministic. _save() only writes
-prompt/completion to test.jsonl, dropping the barcodes -- so we re-run the
-exact same pairing call, patched to also keep the barcodes, and rely on
-determinism to recover the same sequence that produced test.jsonl.
-
-Why the resulting position IS the test_inference_results3.jsonl "idx": see
-original script's docstring (build_axolotl_segments.py 1:1 line order,
-run_test_inference.py's plain enumerate(), rat pairs as the list's prefix,
-_dedup_reverse only drops "_rev" duplicates). Verified per-row below by exact
-string match against test_inference_results3.jsonl's "gt" field.
-
-Only T=1.0 / test_inference_results3.jsonl (see real_counts_suite/README.md).
-
-Output: recovered_rat_test_pairs.csv (idx, pair_type, cell_type, src_barcode,
-tgt_barcode, verified) -- pair_type in {rat_RA_HO, rat_HO_AZI}.
+Output: recovered_rat_test_pairs.csv (idx, pair_type, cell_type,
+src_barcode, tgt_barcode, verified).
 """
 from __future__ import annotations
 
@@ -53,9 +37,9 @@ def _build_pairs_with_barcodes(
     cell_type, pert_str, pair_type, split, n_per_ct, n_augment,
     age_str_tgt=None, pma_weeks_tgt=None, bidirectional=False, rev_pert_str=None,
 ):
-    """Exact copy of stage1_sft_bidir._build_pairs, extended to also stash
-    src_barcode/tgt_barcode on every fwd pair dict. Same RNG calls, same
-    order, same filtering -- only the returned dict gains two keys."""
+    """stage1_sft_bidir._build_pairs with src_barcode and tgt_barcode added to
+    each pair; RNG calls and their order are unchanged.
+    """
     rev_pert_str = pert_str if rev_pert_str is None else rev_pert_str
     src = [bc for bc in src_bcs if bc in src_sent]
     tgt = [bc for bc in tgt_bcs if bc in tgt_sent]
@@ -99,10 +83,7 @@ def _build_pairs_with_barcodes(
 
 
 def rat_pairs_with_barcodes(split: str, sent: dict[str, str]) -> list[dict]:
-    """Copy of SFTBuilder._rat_pairs, calling the barcode-capturing builder.
-    Builds BOTH transitions -- RA->HO (injury) and HO->AZI (rescue) -- same
-    order as the original SFTBuilder, so replaying this reproduces the exact
-    rat-block prefix of test.jsonl / test_inference_results3.jsonl."""
+    """SFTBuilder._rat_pairs with the barcode-keeping builder, in the same order."""
     reg = pd.read_csv(S1.REGISTRY_PATH)
     reg.index = reg["barcode"]
     reg_s = reg[(reg["source"] == "rat") & (reg["split"] == split)]
@@ -135,7 +116,7 @@ def rat_pairs_with_barcodes(split: str, sent: dict[str, str]) -> list[dict]:
 
 
 def dedup_reverse(pairs: list[dict]) -> list[dict]:
-    """Verbatim logic of SFTBuilder._dedup_reverse (fwd untouched)."""
+    """Same logic as SFTBuilder._dedup_reverse."""
     seen = set()
     out = []
     for ex in pairs:
@@ -161,13 +142,13 @@ def main():
     raw_pairs = rat_pairs_with_barcodes("test", rat_s)
     deduped = dedup_reverse(raw_pairs)
     print(f"[replay] {len(raw_pairs)} raw -> {len(deduped)} after dedup_reverse "
-          f"(this prefix-block's index == idx in test.jsonl/test_inference_results3.jsonl)")
+          f"(index == idx in test_inference_results_t10.jsonl)")
 
     fwd_both = [(i, ex) for i, ex in enumerate(deduped)
                 if ex["pair_type"] in ("rat_RA_HO", "rat_HO_AZI")]
     print(f"[filter] {len(fwd_both)} fwd rat_RA_HO + rat_HO_AZI entries recovered")
 
-    print("[verify] loading test_inference_results3.jsonl gt field by idx...")
+    print("[verify] loading gt by idx from test_inference_results_t10.jsonl...")
     gt_by_idx = {}
     with open(TEST_INFERENCE_PATH) as f:
         for line in f:

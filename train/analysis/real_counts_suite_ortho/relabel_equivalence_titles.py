@@ -1,21 +1,12 @@
 #!/usr/bin/env python3
 """
-relabel_equivalence_titles.py — replaces the panel titles on the finished
-equivalence figures with titles a reader can parse.
+Replaces the panel titles of the equivalence figures (S1a, S1b) with
+descriptive titles.
 
-The titles as drawn are pipeline keys: "RA -> HO (injury) (t1.0)",
-"Acute26 (t1.0)", "BPDPH7mo (t1.0)". Nothing else on those figures is wrong, and
-recomputing them means re-running the model over the test cells to redraw one
-line of text, so this edits the raster instead: it finds the title band, paints
-it out, and writes the new titles centred exactly where the old ones sat.
-
-HOW THE POSITIONS ARE FOUND, rather than hard-coded. The title band is the run
-of image rows above the plot frame that contain ink. Inside that band, columns
-holding ink cluster into one group per title, separated by wide empty gaps; the
-centre of each cluster is where that title was centred, so the replacement lands
-in the same place whatever the figure's width or panel count. The band's ink
-height sets the font size, so the new titles come out at the size the old ones
-were.
+The title band is the topmost run of image rows containing ink; within it,
+column clusters separated by wide gaps give one span per title. Each old title
+is painted over and the new one is centred on the same span, at a font size
+derived from the band height.
 
     python relabel_equivalence_titles.py
 """
@@ -49,7 +40,7 @@ GAP_FRAC = 0.02
 
 
 def title_band(dark: np.ndarray) -> tuple[int, int]:
-    """Rows of the topmost ink block -- the titles, above the plot frame."""
+    """Rows of the topmost ink block (the titles)."""
     rows = np.where(dark.any(axis=1))[0]
     start = int(rows[0])
     end = start

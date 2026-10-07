@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 """
-deck_figures.py — the figures the deck needs that did not exist as figures, so that
-comparisons are read off marks rather than off tables.
+Figures for the autophagy analysis of the human BPD7mo arm:
 
-    autophagy_terms.png   which autophagy terms BPD lowers, in how many cell types,
-                          and where the AZI prediction puts them
-    funnel.png            how many autophagy genes survive each successive filter
-    ceiling.png           model fold against the real-real ceiling, per cell type
-    recovery_ratio.png    the pipeline's own recovery_ratio, per gene, autophagy genes disease lowered
+    autophagy_terms.png   autophagy terms lowered by BPD7mo and the predicted
+                          azithromycin shift of each half of the term
+    funnel.png            autophagy genes remaining after each filter step
+    ceiling.png           model fold enrichment against the real-real ceiling
+    recovery_ratio.png    recovery_ratio per autophagy gene lowered by disease
 
-Colours are the suite's own (abs_analysis/plot_style.py): blue = real / measured,
-orange = model. Both are direct-labelled and carry a marker shape as well, so
-identity never rests on colour alone.
+Also defines the colours and axis style used by build_panelC_dotplot.py.
 
-    python deck_figures.py     -> deck_figures/*.png
+    python deck_figures.py -> deck_figures/*.png
 """
 from __future__ import annotations
 
@@ -80,8 +77,7 @@ LIB_TAG = {"GO_Biological_Process_2023": "GO", "KEGG_2021_Human": "KEGG",
 
 
 def short(term: str, lib: str | None = None) -> str:
-    """Strip the accession, keep the source — several libraries reuse the same
-    title for different gene sets, and the sign follows the composition."""
+    """Term name without the accession, with the library tag when lib is given."""
     import re
     t = re.sub(r"\s*R-HSA-?\d*\s*$", "", term)
     t = re.sub(r"\s*\(GO:\d+\)\s*$", "", t)
@@ -90,23 +86,14 @@ def short(term: str, lib: str | None = None) -> str:
 
 
 def _term_halves(terms, condition="BPD7mo"):
-    """Per term x cell type, the AZI shift of the two halves SEPARATELY.
+    """Per term and cell type, the predicted azithromycin shift of the two
+    halves of the term separately:
 
-    A term is a membership list with no sign: it holds genes disease lowered
-    and genes disease raised, and under the AZI prompt correct behaviour points
-    those two halves in OPPOSITE directions. A single signed statistic over the
-    whole term (GSEA NES on the recovery ranking, which this panel used to show)
-    therefore nets one against the other, and a term whose halves both move
-    correctly can still come out negative. Splitting first is the fix.
+        recovery = log2FC_AZI - log2FC_disease, both against the Term control
+        down     = members with log2FC_disease < -0.25, expected recovery > 0
+        up       = members with log2FC_disease > +0.25, expected recovery < 0
 
-        recovery = log2FC_AZI - log2FC_disease, both against the same real Term
-                   control, so the difference is exactly log2FC(AZI vs disease)
-        down     = members with log2FC_disease < -0.25   expected: recovery > 0
-        up       = members with log2FC_disease > +0.25   expected: recovery < 0
-
-    p is a one-sample Wilcoxon signed-rank on the members, NaN below 6 of them.
-    Members with |log2FC_disease| <= 0.25 are in neither half: disease did not
-    move them, so there is nothing for the model to move back.
+    p: one-sample Wilcoxon signed-rank test, NaN below 6 members.
     """
     import json
     from scipy.stats import wilcoxon
@@ -139,14 +126,10 @@ def _term_halves(terms, condition="BPD7mo"):
 
 
 def autophagy_terms():
-    """Left: in how many of the four cell types does BPD lower each autophagy term.
-    Right: for the five it lowers everywhere, where the AZI prediction puts each
-    HALF of the term -- separately, because netting the two cancels them.
-
-    Right-hand colour is signed by the direction that would be correct for that
-    half: blue = the model moved those members back toward the control, red =
-    further from it. The printed number is the raw median, so the sign
-    convention never hides what the data say.
+    """Left: number of cell types in which BPD7mo lowers each autophagy term
+    (GSEA NES). Right: for the terms lowered in all four, the median predicted
+    shift of each half; colour is signed by the expected direction of the half,
+    the printed number is the raw median.
     """
     c = rd("human_panel_variants/autophagy_program/reports/bpd7mo_arms_concordance.csv")
     a = c[c.is_autophagy_term & (c.condition == "BPD7mo")].dropna(
@@ -270,8 +253,7 @@ def autophagy_terms():
 
 
 def funnel():
-    """Why the two autophagy slides carry different gene counts: they stop at
-    different steps of the same filter chain. BPD7mo, genes disease LOWERED."""
+    """Autophagy genes lowered by BPD7mo after each filter step, per cell type."""
     import json
     blob = json.loads((HERE / "autophagy_panel/reports/autophagy_terms_found.json").read_text())
     universe = set()
@@ -349,17 +331,10 @@ def ceiling():
 
 
 def recovery_ratio():
-    """The pipeline's own quantity, not a new one:
-
-        recovery_ratio = |log2FC_AZI| / |log2FC_disease|,  both against real Term
-
-    Below 1 the prediction sits closer to the healthy control than disease left
-    the gene; above 1, further from it. 0.9 is the gate the rat workbooks use and
-    is drawn as a reference line, not a cut.
-
-    Genes the model never names are excluded rather than scored: their
-    log2FC_AZI is -log2(mean_Term + 1), a number fixed by the control alone, so
-    their ratio carries no information about the model. Their count is printed.
+    """recovery_ratio = |log2FC_AZI| / |log2FC_disease|, both against the Term
+    control, per autophagy gene lowered by disease; 0.9, the rat threshold, is
+    drawn as a reference line. Genes absent from all predictions are counted
+    ("silent") and not plotted.
     """
     import json
     blob = json.loads((HERE / "autophagy_panel/reports/autophagy_terms_found.json").read_text())

@@ -1,31 +1,18 @@
 #!/usr/bin/env python3
 """
-build_panelC_dotplot.py — panel C of the main figure: four panels out of the
-unbiased cameraPR screen, drawn per cell type and per half.
+Panel C of the main figure: four terms of the cameraPR screen
+(human_panel_variants/limma_sets.py, azi arm), per cell type and per half of
+the term (genes lowered or raised by disease).
 
-The screen itself is not run here. It is limma camera/cameraPR over all 8421
-terms of the five Enrichr libraries, azi arm, written by
-human_panel_variants/limma_sets.py into bpd7mo_limma_sets.csv; this script only
-reads four of its rows and draws them, so no number here can differ from the
-screen's own output.
+Terms: Hallmark Inflammatory Response and Interferon Gamma Response; Reactome
+Autophagy and Macroautophagy (Macroautophagy is a 114-gene subset of the
+128-gene Autophagy set).
 
-WHICH FOUR, AND WHY THOSE. The two inflammation panels are the strongest thing
-the screen returns: significant in 4 of 4 cell types, and each its own group at
-containment 0.9 in the grouped-terms table, so they are two signals rather than
-one counted twice. The two autophagy panels are significant in 3 of 4 and are
-here because the rat azithromycin experiment pointed at autophagy before this
-screen was run -- they are not the top of the list and the figure should not
-imply they are. Autophagy and Macroautophagy sit in ONE group (group 28):
-Macroautophagy is a 114-gene subset of the 128-gene Autophagy, so the two rows
-are one signal drawn twice. That is kept deliberately, because the reader can
-see the subset relation in the printed gene counts, and the caption states it.
+Colour: toward or away from the control; black outline: cameraPR FDR < 0.05;
+opacity: -log10 FDR; dot area and printed number: genes in the half.
 
-Encoding is the same as the screen-wide dotplot: colour is whether the panel
-moves back toward the control or away from it, black outline is cameraPR
-FDR<0.05, opacity is -log10 FDR, and dot area is the number of genes of that
-panel in that half, printed under the dot.
-
-    python build_panelC_dotplot.py -> deck_figures/camerapr_panelC_dotplot.png
+    python build_panelC_dotplot.py [--cohort BPD7mo|BPDPH7mo|Acute26]
+        -> deck_figures/camerapr_panelC_dotplot.png
 """
 from __future__ import annotations
 

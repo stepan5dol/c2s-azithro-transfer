@@ -1,22 +1,16 @@
 #!/usr/bin/env python3
 """
-build_all_panel_variants.py — the two rat arms of the real three-armed
-experiment, on the unfiltered rescued panel:
+Rat rescued-gene delta figures for both arms of the experiment:
 
     injury arm      room air  -> hyperoxia
     treatment arm   hyperoxia -> hyperoxia + azithromycin
 
-Each is built twice: all four cell types on one figure, then gCap alone on its
-own. Hyperoxia-suppressed and hyperoxia-induced genes are separate violins; see
-updown_core.py for the delta construction and panel_sets.py for the panel.
+Each arm is drawn for all four cell types and for gCap alone, with the
+full_list panel (panel_sets.py); the delta construction is in updown_core.py.
+Predictions: test_inference_results_t10.jsonl (temperature 1.0).
 
-Unlike the human side, the treatment arm here is measured, not predicted, so
-real and model blocks are both present in it.
-
-Run a single combination instead (gate may be "gated" to override):
-    python build_all_panel_variants.py azi full_list
-
-Only T=1.0 / test_inference_results3.jsonl (see real_counts_suite/README.md).
+    python build_all_panel_variants.py              both arms, full_list
+    python build_all_panel_variants.py azi gated    one arm and gate
 """
 import sys
 

@@ -1,52 +1,24 @@
 #!/usr/bin/env python3
 """
-export_for_limma.py — dump the BPD7mo arms as plain matrices so limma's camera
-and fry can be run on them (limma_sets.py, through rpy2).
+Exports the arms of one human cohort as matrices for limma camera, cameraPR
+and fry (limma_sets.py), per cell type:
 
-WHY. Everything in this suite that asks a set-level question of the disease arm
-so far uses either GSEA prerank or a Mann-Whitney, and both treat genes as
-independent. Genes inside a pathway are correlated, so both are anticonservative
--- the p-values are too small by an amount neither method reports. limma's
-`camera` estimates the inter-gene correlation and inflates the variance by
-1 + (m-1)*rho; `fry` is a self-contained rotation test whose PValue.Mixed asks
-"is this set moved at all, in either direction", which is the one standard
-statistic that does not cancel on a set holding both directions.
+    disease  control cells (Term0d + Term20d; He22 for Acute26), then disease
+             cells; contrast disease vs control
+    azi      disease cells, then the model's azithromycin predictions;
+             contrast prediction vs disease
 
-TWO ARMS ARE EXPORTED, per cell type, matching the existing table exactly:
+    matrix   genes x cells, log1p CPM10k, top-800 truncated (the values of
+             human_rescue_pipeline_genomewide.py)
+    genes    genes of human_rescue_genomewide.csv passing min.pct in both arms
+    stat     avg_log2FC_disease_top800, in gene order
 
-    disease   columns = real Term0d+Term20d control, then real BPD7mo
-              contrast = BPD7mo vs control. Both sides real; this is the arm
-              that describes the patients.
-    azi       columns = real BPD7mo, then the model's AZI-counterfactual
-              predictions. contrast = prediction vs disease, i.e. "does the
-              model move this pathway back". No human patient received
-              azithromycin, so this arm is model behaviour throughout.
+Columns are cells, so the p-values refer to groups of cells, not donors. In
+the azi arm the measured and the reconstructed side differ in cell-to-cell
+variance.
 
-    matrix   genes x cells, log1p CPM10k, top-800-truncated -- the same values
-             human_rescue_pipeline_genomewide.py computes avg_log2FC from. The
-             top-800 budget is kept even on the all-real disease arm ON PURPOSE:
-             the AZI arm cannot leave it (the model emits at most 800 genes per
-             cell), so an untruncated disease arm would not be comparable to the
-             thing it is being compared against.
-    rows     the genes of human_rescue_genomewide.csv that pass min.pct on BOTH
-             arms, i.e. the same universe every other figure in the deck uses
-    stat     avg_log2FC_disease_top800 for those genes, in row order
-
-THE REPLICATION UNIT DOES NOT CHANGE. Columns are cells from 2 BPD7mo and 2
-control patients, so every p-value out of this is a statement about these
-groups of cells, exactly as the rest of the suite's per-cell tests are.
-
-ONE ASYMMETRY TO KEEP IN MIND ON THE AZI ARM. Its two sides are not produced
-the same way: the BPD7mo columns are measured cells truncated to top-800, the
-AZI columns are reconstructed from the model's rank list through the
-rank->expr curve. Reconstruction flattens cell-to-cell variance, and camera
-compares distributions, not just means -- so some of any difference it reports
-on that arm is the reconstruction, not the drug prompt. The disease arm has no
-such asymmetry.
-
-    python export_for_limma.py   -> reports/limma_input/{ct}.{bin,json}
-                                    reports/limma_input/{ct}_azi.{bin,json}
-                                    reports/limma_input/sets.json
+    python export_for_limma.py [--condition BPD7mo]
+        -> reports/limma_input/{ct}.{bin,json}, {ct}_azi.{bin,json}, sets.json
 """
 from __future__ import annotations
 

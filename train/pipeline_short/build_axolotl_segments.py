@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
 """
-Convert pipeline_short/sft_dataset_bidir/{train,valid,test}.jsonl
-({"prompt":..., "completion":...}) into axolotl's `input_output` dataset
-format: {"segments": [{"label": false, "text": ...}, {"label": true, "text": ...}]}.
+Converts sft_dataset_bidir/{train,valid,test}.jsonl ({"prompt", "completion"})
+into the axolotl input_output format:
 
-label=false -> masked (no loss, -100), label=true -> loss computed.
-Mirrors the manual masking already verified correct in sft_train-3.py:
-prompt segment (unmasked->masked) + " " + completion segment (masked->loss),
-leading space kept so the byte-level BPE tokenizer fuses it onto the first
-completion token the same way at train time as it will at inference time.
-No EOS appended here -- axolotl's input_output loader appends eos_token
-itself per sequence when tokenizing (confirm with a preprocess dry run
-before trusting this on a full run).
+    {"segments": [{"label": false, "text": prompt},
+                  {"label": true,  "text": " " + completion + "<|endoftext|>"}]}
+
+Segments with label=false are masked from the loss. The leading space before
+the completion matches the tokenization at inference.
 """
 import json
 from pathlib import Path
